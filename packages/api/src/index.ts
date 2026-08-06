@@ -3,13 +3,20 @@
 import { loadAppEnv, startApiServer } from '@platform/core-api';
 import app from './app.js';
 import { closeDb, getDb } from './db/connection.js';
-import { startAll, stopAll } from './services/poller-runner.js';
+import { registerPoller, startAll, stopAll } from './services/poller-runner.js';
+import { feedPoller } from './services/pollers/feed.js';
+import { clausesPoller } from './services/pollers/clauses.js';
+import { standingsPoller } from './services/pollers/standings.js';
 import { VERSION } from './constants.js';
 
 // .env desde raíz de la app (dev en monorepo) o cwd (docker); .env.local sobrescribe
 loadAppEnv(import.meta.url);
 
 getDb();
+
+registerPoller(feedPoller);
+registerPoller(clausesPoller);
+registerPoller(standingsPoller);
 
 // DISABLE_POLLING=1 permite trabajar en local contra un snapshot de producción
 if (process.env.DISABLE_POLLING !== '1') {

@@ -75,6 +75,8 @@ export interface SessionInfo {
 	season: string;
 	/** saldo actual del mánager propio en la comunidad activa */
 	balance: number | null;
+	/** id_uc del mánager propio en esta comunidad (member.id de _FG_cfg) */
+	selfManagerId: string | null;
 }
 
 /**
@@ -97,12 +99,17 @@ export function parseSessionInfo(html: string): SessionInfo | null {
 	const balanceBlock = extractBetween(cfg, '"balance":{', '}');
 	const rawBalance = balanceBlock ? extractNumericField(balanceBlock, '"current":') : null;
 
+	// "member":{"id":1345738} identifica al mánager propio dentro de la comunidad
+	const memberBlock = extractBetween(cfg, '"member":{', '}');
+	const selfManagerId = memberBlock ? extractNumericField(memberBlock, '"id":') : null;
+
 	return {
 		auth,
 		communityId: communityId.trim(),
 		// el json crudo escapa la barra: "26\/27"
 		season: rawSeason ? rawSeason.replace('\\/', '/') : '',
 		balance: rawBalance ? Number.parseInt(rawBalance.trim(), 10) : null,
+		selfManagerId,
 	};
 }
 
@@ -206,14 +213,13 @@ export function parseBalanceInfo(html: string): BalanceInfo {
 // ===== clasificación =====
 
 export interface StandingsEntry {
-	managerId: string | null;
+	/** id_uc del mánager, extraído de href="users/<id>/slug" */
+	managerId: string;
 	name: string;
 	position: number;
 	points: number;
 	teamValue: number;
 	playersCount: number | null;
-	/** true en la fila del mánager propio */
-	isSelf: boolean;
 }
 
 /**
@@ -222,42 +228,40 @@ export interface StandingsEntry {
  */
 export function parseStandings(html: string): StandingsEntry[] {
 	const entries: StandingsEntry[] = [];
-	const listStart = html.indexOf('standings');
-	if (listStart === -1) return entries;
+	const seen = new Set<string>();
 
-	let cursor = listStart;
-	let position = 0;
+	// cada fila es un enlace `users/<id_uc>/<slug>`. la página trae dos pestañas
+	// (general y jornada) con los mismos mánagers, así que hay que deduplicar.
+	const linkPattern = /href="users\/(\d+)\/[^"]*"/g;
+	let match: RegExpExecArray | null;
 
-	while (true) {
-		const rowStart = html.indexOf('<li', cursor);
-		if (rowStart === -1) break;
-		const nextRow = html.indexOf('<li', rowStart + 3);
-		const row = html.slice(rowStart, nextRow === -1 ? html.length : nextRow);
-		cursor = nextRow === -1 ? html.length : nextRow;
+	while ((match = linkPattern.exec(html)) !== null) {
+		const managerId = match[1];
+		if (seen.has(managerId)) continue;
 
-		const name = extractBetween(row, 'class="name">', '<');
-		if (!name) {
-			if (nextRow === -1) break;
-			continue;
-		}
+		const rowEnd = html.indexOf('</a>', match.index);
+		const row = html.slice(match.index, rowEnd === -1 ? html.length : rowEnd);
 
-		const managerId = extractBetween(row, 'data-id_uc="', '"') ?? extractBetween(row, 'users/', '/');
-		const valueText = extractClassText(row, 'class="value"');
+		// la clase lleva un espacio final en el markup real: `class="name "`
+		const name = extractClassText(row, 'class="name');
+		if (!name) continue;
+
+		const positionText = extractClassText(row, 'class="position"');
 		const pointsText = extractClassText(row, 'class="points"');
-		const playersText = extractBetween(row, 'class="played">', '<');
+		// "14 jugadores · € 215.214.000": conviven número de jugadores y valor
+		const playedText = extractClassText(row, 'class="played"');
+		const valuePart = playedText?.split('€')[1] ?? null;
+		const playersPart = playedText?.split('jugadores')[0] ?? null;
 
-		position += 1;
+		seen.add(managerId);
 		entries.push({
-			managerId: managerId?.trim() ?? null,
+			managerId,
 			name: name.trim(),
-			position,
+			position: positionText ? parseEuropeanNumber(positionText) : entries.length + 1,
 			points: pointsText ? parseEuropeanNumber(pointsText) : 0,
-			teamValue: valueText ? parseBalanceValue(valueText) : 0,
-			playersCount: playersText ? parseEuropeanNumber(playersText) || null : null,
-			isSelf: row.includes('is-me') || row.includes('myself'),
+			teamValue: valuePart ? parseEuropeanNumber(valuePart) : 0,
+			playersCount: playersPart ? parseEuropeanNumber(playersPart) || null : null,
 		});
-
-		if (nextRow === -1) break;
 	}
 
 	return entries;
