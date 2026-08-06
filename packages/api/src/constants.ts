@@ -13,6 +13,12 @@ export const USER_AGENT =
 export const FREE_AGENT = 'Libre';
 export const SYSTEM_MANAGER = 'Fantasy MARCA';
 
+/** tamaño de página del feed: el mismo que usa `_FG_data.feed` en la web */
+export const FEED_CARDS_PER_PAGE = 20;
+
+/** tope de páginas al recorrer el feed hacia atrás; una temporada son ~12 */
+export const FEED_MAX_PAGES = 200;
+
 // economía de cláusulas (verificado temporada 26/27)
 export const CLAUSE = {
 	/** multiplicador por defecto tras un reset o una compra */

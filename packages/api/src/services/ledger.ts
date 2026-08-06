@@ -5,17 +5,14 @@
 //   cash = cash_inicial - comprado + vendido - gasto_en_cláusulas
 //   poder_de_puja = max(0, cash + 25% del valor de plantilla)
 //
-// el presupuesto inicial es UNIFORME: no hay bonus por referidos.
+// el presupuesto inicial es UNIFORME: no hay bonus por referidos. lo que cambia
+// entre mánagers es el valor de la plantilla que les tocó en el reset.
 //
-// ⚠️ el baseline `200M − valor_de_plantilla` está SESGADO: valora la plantilla a
-// precio de mercado, pero el mánager pagó lo que pagó. cada euro de prima sobre el
-// valor (habitual en las pujas de inicio de temporada) desaparece de la cuenta y
-// deja el saldo estimado demasiado alto. medido en Mourinheiro: 28.2M de prima
-// entre coste (240.7M) y valor (212.5M) de su plantilla.
+// el saldo inicial NO se estima: se reconstruye exacto en services/baseline.ts a
+// partir de la plantilla del reset (feed completo) valorada con la serie diaria de
+// valores. contrastado con los dos saldos reales conocidos, delta de 0 €.
 //
-// el coste real de cada jugador es el SUELO de su cláusula, que es exactamente el
-// precio pagado y no cambia. por eso el baseline correcto usa suelos, no valores.
-// la fila propia se calibra con /ajax/balance y es exacta.
+// la fila propia se calibra además con /ajax/balance en cada pasada.
 
 import { CLAUSE } from '../constants.js';
 import { latestAnchor } from '../queries/anchors.js';
@@ -23,8 +20,30 @@ import { accountableTransfers } from '../queries/transfers.js';
 import { latestOwnedSnapshots, recentClauseChanges } from '../queries/players.js';
 import { clauseLadderCost, clauseSteps } from '../scraper/json.js';
 import { getDb } from '../db/connection.js';
-import { manager } from '../db/schema.js';
-import { eq } from 'drizzle-orm';
+import { balanceMovement, manager } from '../db/schema.js';
+import { and, desc, eq } from 'drizzle-orm';
+
+/** tipo de movimiento con el que el juego apunta el saldo inicial y su ajuste */
+const BONUS_MOVEMENT = 'Bonificación';
+
+/**
+ * instante del último reset de liga, leído del historial de balance propio.
+ *
+ * el juego lo marca con movimientos de tipo `Bonificación` ("Saldo inicial" y
+ * "Ajuste de balance por reinicio de liga"): el último de ellos es el momento en
+ * que se fijaron los saldos. hace falta porque el feed NO se corta ahí, sigue
+ * arrastrando la cola de la temporada anterior, cuyos traspasos no cuentan.
+ */
+export function getResetAt(communityId: string): number | null {
+	const [row] = getDb()
+		.select()
+		.from(balanceMovement)
+		.where(and(eq(balanceMovement.communityId, communityId), eq(balanceMovement.type, BONUS_MOVEMENT)))
+		.orderBy(desc(balanceMovement.ts))
+		.limit(1)
+		.all();
+	return row?.ts ?? null;
+}
 
 export interface CashEstimate {
 	cash: number;
@@ -126,8 +145,11 @@ export function estimateCash(communityId: string, managerId: string): CashEstima
 	let count = 0;
 
 	for (const t of accountableTransfers(communityId)) {
-		// con ancla, lo anterior a ella ya está reflejado en el saldo declarado
-		if (t.seenAt <= since) continue;
+		// con ancla, lo anterior a ella ya está reflejado en el saldo declarado.
+		// se compara contra CUÁNDO OCURRIÓ, no cuándo lo vimos: desde que el feed se
+		// pagina hacia atrás se registran eventos de hace días, y filtrar por seenAt
+		// los colaba después del ancla y los contaba dos veces
+		if ((t.occurredAt ?? t.seenAt) <= since) continue;
 		if (t.toManagerId === managerId) {
 			spent += t.price;
 			count += 1;

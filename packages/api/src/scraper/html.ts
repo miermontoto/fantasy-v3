@@ -54,7 +54,10 @@ export function parseBalanceValue(text: string): number {
 }
 
 export function stripTags(html: string): string {
-	return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+	return html
+		.replace(/<[^>]*>/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim();
 }
 
 /** valor numérico de un campo json crudo, termine en coma o en cierre de objeto */
@@ -111,85 +114,6 @@ export function parseSessionInfo(html: string): SessionInfo | null {
 		balance: rawBalance ? Number.parseInt(rawBalance.trim(), 10) : null,
 		selfManagerId,
 	};
-}
-
-// ===== traspasos del feed =====
-
-export interface TransferEvent {
-	feedId: number;
-	playerId: string;
-	playerName: string;
-	/** null cuando el origen/destino es el sistema (mercado) */
-	from: string | null;
-	to: string | null;
-	price: number;
-}
-
-/**
- * extrae los traspasos de las tarjetas `card-transfer` del feed.
- *
- * una tarjeta puede contener varios jugadores, así que la clave de dedup es
- * (feedId, playerId). los eventos del feed hacen scroll y desaparecen: este parser
- * es la razón de que el poller del feed corra cada 15 minutos.
- */
-export function parseFeedTransfers(html: string): TransferEvent[] {
-	const events: TransferEvent[] = [];
-	let cursor = 0;
-
-	while (true) {
-		const cardStart = html.indexOf('id="feed-', cursor);
-		if (cardStart === -1) break;
-
-		const idStart = cardStart + 'id="feed-'.length;
-		const idEnd = html.indexOf('"', idStart);
-		if (idEnd === -1) break;
-
-		const feedId = Number.parseInt(html.slice(idStart, idEnd), 10);
-		const nextCard = html.indexOf('id="feed-', idEnd);
-		const cardEnd = nextCard === -1 ? html.length : nextCard;
-		const card = html.slice(idEnd, cardEnd);
-		cursor = cardEnd;
-
-		if (Number.isNaN(feedId)) continue;
-		// solo tarjetas de traspaso: el tipo va en la etiqueta de apertura
-		const tagEnd = card.indexOf('>');
-		if (tagEnd === -1 || !card.slice(0, tagEnd).includes('card-transfer')) continue;
-
-		let itemCursor = 0;
-		while (true) {
-			const nameStart = card.indexOf('<strong>', itemCursor);
-			if (nameStart === -1) break;
-			itemCursor = nameStart + '<strong>'.length;
-
-			// acotar el item al siguiente <strong> para no robar campos del siguiente
-			const nextName = card.indexOf('<strong>', itemCursor);
-			const item = card.slice(nameStart, nextName === -1 ? card.length : nextName);
-
-			const playerName = extractBetween(item, '<strong>', '</strong>');
-			const fromRaw = extractBetween(item, 'cambia de <em>', '</em>');
-			if (!playerName || !fromRaw) continue;
-
-			const afterFrom = item.indexOf('</em>') + '</em>'.length;
-			const toRaw = extractBetween(item.slice(afterFrom), '<em>', '</em>');
-			const playerId = extractBetween(item, 'href="players/', '/');
-			const priceText = extractBetween(item, 'class="price">', '<');
-			if (!toRaw || !playerId || !priceText) continue;
-
-			const from = fromRaw.trim();
-			const to = toRaw.trim();
-
-			events.push({
-				feedId,
-				playerId,
-				playerName: playerName.trim(),
-				from: from === SYSTEM_MANAGER ? null : from,
-				to: to === SYSTEM_MANAGER ? null : to,
-				price: parseEuropeanNumber(priceText),
-			});
-		}
-	}
-
-	return events;
 }
 
 // ===== saldos =====

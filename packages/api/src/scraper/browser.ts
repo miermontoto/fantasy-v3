@@ -6,7 +6,7 @@
 
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { FANTASY_BASE_URL, USER_AGENT } from '../constants.js';
+import { FANTASY_BASE_URL, FEED_CARDS_PER_PAGE, USER_AGENT } from '../constants.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -105,6 +105,21 @@ export class Browser {
 
 	feed(): Promise<string> {
 		return this.get('/feed');
+	}
+
+	/**
+	 * página del feed en json. la web manda `_FG_data.feed` serializado por jquery,
+	 * así que hay que reproducir esas cuatro claves tal cual; `offset=0` funciona y
+	 * devuelve también las tarjetas que el html renderiza en servidor.
+	 */
+	feedPage(offset: number, cardsPerPage = FEED_CARDS_PER_PAGE): Promise<string> {
+		const payload = new URLSearchParams({
+			end: 'false',
+			loading: 'false',
+			offset: String(offset),
+			cardsPerPage: String(cardsPerPage),
+		}).toString();
+		return this.post('/ajax/feed', payload);
 	}
 
 	market(): Promise<string> {

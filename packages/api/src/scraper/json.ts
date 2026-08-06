@@ -201,7 +201,10 @@ export function parseBalanceHistory(data: unknown): BalanceMovement[] {
 			ts: num(m.ts),
 			date: str(m.adate),
 			type: str(m.type),
-			reason: str(m.reason).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
+			reason: str(m.reason)
+				.replace(/<[^>]*>/g, ' ')
+				.replace(/\s+/g, ' ')
+				.trim(),
 			amount: num(m.amount),
 			balance: num(m.balance),
 		});
@@ -246,6 +249,38 @@ function parseSpanishDateTime(text: string): number | null {
 	if (!text) return null;
 	const ms = Date.parse(text.replace(' ', 'T'));
 	return Number.isNaN(ms) ? null : ms;
+}
+
+// ===== histórico de valor (values_chart del detalle) =====
+
+/** meses tal y como los etiqueta el juego en `values_chart.points[].date` */
+const SPANISH_MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+/**
+ * etiqueta de día en el formato del juego ("1 ago 2026"): sin cero a la izquierda
+ * y con el mes abreviado en español. es la clave del histórico de valores.
+ */
+export function spanishDay(date: Date): string {
+	return `${date.getDate()} ${SPANISH_MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+/**
+ * serie diaria de valor de un jugador (366 días) indexada por etiqueta de día.
+ *
+ * es la pieza que permite valorar una plantilla en una fecha PASADA, y con ella
+ * reconstruir el `Saldo inicial` exacto de cualquier mánager en vez de estimarlo.
+ */
+export function parseValueHistory(data: unknown): Map<string, number> {
+	const chart = asRecord(asRecord(data)?.values_chart);
+	const points = Array.isArray(chart?.points) ? chart.points : [];
+	const series = new Map<string, number>();
+	for (const raw of points) {
+		const point = asRecord(raw);
+		if (!point) continue;
+		const day = str(point.date);
+		if (day) series.set(day, num(point.value));
+	}
+	return series;
 }
 
 // ===== cláusulas =====

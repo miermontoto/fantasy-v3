@@ -54,6 +54,26 @@ export function upsertManager(input: {
 	return input.id;
 }
 
+/**
+ * registra un renombre visto en el feed (tarjeta `change_name`).
+ *
+ * el juego avisa de cada cambio de nombre, así que los alias se descubren solos:
+ * en v2 había que mantenerlos a mano en ledger.json. devuelve true si el alias
+ * era nuevo. si el nombre anterior no corresponde a ningún mánager conocido se
+ * ignora: llegará por la clasificación y el siguiente barrido lo recogerá.
+ */
+export function recordRename(communityId: string, previousName: string, newName: string): boolean {
+	const managerId = resolveManagerId(communityId, previousName) ?? resolveManagerId(communityId, newName);
+	if (!managerId) return false;
+
+	const db = getDb();
+	const [existing] = db.select().from(managerAlias).where(eq(managerAlias.alias, previousName)).limit(1).all();
+	addAlias(previousName, managerId);
+	// el nombre vigente pasa a ser el canónico de la ficha
+	db.update(manager).set({ name: newName }).where(eq(manager.id, managerId)).run();
+	return !existing;
+}
+
 /** registra un nombre alternativo (renombre de equipo) */
 export function addAlias(alias: string, managerId: string): void {
 	const db = getDb();

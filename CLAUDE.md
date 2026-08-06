@@ -97,18 +97,41 @@ construye la url como `ajax/` + el `data-ajax` del botón):
   Mourinheiro le cargaba 8.5M teniendo sus 14 jugadores en el 1.5 por defecto.
   el multiplicador real y el precio pagado solo los da `player-community-info`,
   que es lo que recoge el poller `clause-detail` (1 petición por jugador, 12h).
+- el poller de cláusulas guarda snapshot de la **liga entera**, no solo de lo que
+  tiene dueño: los ~328 agentes libres son la otra mitad del mercado. el diff de
+  eventos sigue mirando solo a los que tienen dueño (un libre no tiene cláusula
+  que subir), y `latestOwnedSnapshots` sigue filtrando, porque valor de plantilla,
+  baseline y objetivos de cláusula se inflarían contando libres.
+- ⚠️ en un `clause_change` de tipo `released`, `ownerId` es el dueño que **pierde**
+  al jugador, no el que lo gana (`prevOwnerId` va vacío). sin invertirlo, el feed
+  pinta «mercado → X» y una baja se lee como un fichaje.
 - ⚠️ los `clause_change` de tipo `clause_up` guardados hasta ahora traen
   `oldClause = 0` (los 16 que hay): el diff los emite así cuando el snapshot
   previo no tenía cláusula, y son en su mayoría **falsos positivos** de la
   primera pasada, no subidas reales. la ui no pinta el salto si la cláusula
   anterior es 0, porque «0.00M → 4.76M» se lee como que no tenía cláusula.
   el filtro del poller sigue pendiente de endurecer.
-- el baseline `200M − valor_de_plantilla` está **sesgado**: valora la plantilla a
-  precio de mercado, pero en las pujas se paga prima. la de Mourinheiro costó
-  240.7M y vale 212.5M. el sesgo NO se puede recuperar a posteriori (las
-  plantillas rotan y no se sabe quién estaba el día del baseline), así que se
-  corrige con anclas: `POST /api/anchors` fija el saldo real conocido de un
-  mánager y la estimación solo suma lo posterior.
+- el saldo inicial **se reconstruye exacto**, no se estima: `saldo_inicial =
+  200M − valor de la plantilla el día del reset`. la plantilla de ese día sale de
+  deshacer sobre la actual todos los traspasos posteriores (el feed es completo), y
+  se valora con `values_chart` del detalle, que trae **366 valores diarios** por
+  jugador. `POST /api/baseline/recompute` (dry-run; `?apply=true` para escribir).
+  contrastado con los dos saldos reales conocidos: **delta de 0 €** en ambos.
+- las anclas (`POST /api/anchors`) siguen existiendo como red de seguridad, pero
+  **ya no hacen falta**: con el baseline reconstruido los dos saldos verificables
+  salen exactos sin ninguna ancla puesta.
+- un mánager puede **regalar** un jugador a otro (precio 0). el juego **no publica
+  tarjeta** en el feed, así que es el único movimiento de plantilla que no se
+  descubre solo: hay que anotarlo con `POST /api/transfers/gift`
+  (`kind = 'gift'`, `source = 'manual'`). no mueve dinero, pero sí el baseline —
+  sin él el jugador se le atribuye en el reset a quien lo tiene HOY en vez de a
+  quien lo regaló, y **los saldos iniciales de los dos salen mal**.
+  caso real: Infanmafia cedió a Jonathan Asp Jensen (71343) a Mourinheiro el 1 ago.
+- `purchase_price = 0` es la huella de un regalo. si no hay traspaso que lo
+  explique, el jugador se deja **fuera** de la plantilla del reset (no se le puede
+  atribuir a nadie) y `shortRosters` lo delata: en el reset todos reciben la misma
+  cantidad de jugadores (15 en 26/27), así que quedarse corto significa que falta
+  uno por atribuir y ese saldo inicial sale ALTO.
 
 ### contabilidad
 - `max_bid = max(0, cash + 25% × valor_de_plantilla)`. el 25% es la deuda
@@ -116,15 +139,34 @@ construye la url como `ajax/` + el `data-ajax` del botón):
   existe la capacidad de compra negativa. la "deuda máxima" que muestra el mercado
   es la capacidad **restante**, que además descuenta las pujas comprometidas
   (`remaining_now`): techo 10.56M − 1.33M comprometido = 9.23M observado.
-- el presupuesto inicial **sí es uniforme** (200M): **no hay bonus por referidos**.
-  el historial lo parte en "Saldo inicial" + "Ajuste por reinicio", pero la suma es
-  igual para todos. el error del baseline viene de capturarlo después del reset,
-  con los valores de plantilla ya movidos.
-- los eventos del feed **hacen scroll y desaparecen**: en v2 se perdieron dos
-  traspasos sincronizando 1×/día. de ahí que el poller del feed sea el crítico
-  (15 min) y que exista reconciliación por `transfer.price` del detalle.
-- los renombres de equipo parten la identidad: las tarjetas del feed usan el
-  nombre ACTUAL y la clasificación el original → tabla `manager_alias`.
+- el presupuesto **sí es uniforme** (200M), pero el **saldo inicial NO**: cada uno
+  arranca con `200M − valor de la plantilla que le tocó`. el historial lo parte en
+  "Saldo inicial" + "Ajuste de balance por reinicio de liga"; el ajuste no es un
+  bonus, es el juego cuadrando el baseline a la valoración del día del reset. hay
+  que **sumar los dos**: por separado ninguno cuadra.
+- el feed **NO se pierde por scroll**: `POST /ajax/feed` lo pagina hasta el
+  principio (`end=false&loading=false&offset=N&cardsPerPage=20`, el objeto
+  `_FG_data.feed` que serializa jquery) y responde `status:"end"` al acabar. una
+  temporada entera son ~12 páginas. `POST /api/sync/feed/backfill` recorre todo.
+  contrastado contra el historial de balance propio: los 22 movimientos de compra
+  y venta aparecen en el feed, sin faltar ni sobrar ninguno.
+- el feed **no se corta en el reset de liga**: arrastra la cola de la temporada
+  anterior, cuyos traspasos no cuentan. el instante del reset se saca del último
+  movimiento `Bonificación` del balance propio (`getResetAt`) y lo anterior se
+  marca `baseline = true`.
+- categorías del feed: `transfer` (mueve dinero), `player_transfer` (traspaso REAL
+  de laliga, **no** cuenta), `change_name`, `join`, `admin`, `market_unified`
+  (snapshot del mercado con pujas: sin explotar todavía).
+- los renombres de equipo ya **no** se mantienen a mano: las tarjetas `change_name`
+  traen `previous_name`/`new_name` y alimentan solas `manager_alias`. hay que
+  aplicarlas en orden cronológico ascendente; el feed se recorre al revés y si no
+  el nombre que acaba ganando es el más antiguo.
+- el json del feed trae `id_uc_from`/`id_uc_to` **numéricos**, así que la
+  contabilidad no depende de casar nombres de equipo. es la razón de usarlo en vez
+  de las tarjetas html.
+- cualquier lógica temporal usa `occurredAt`, **no** `seenAt`: desde que hay
+  backfill se registran eventos de hace días, y filtrar por «cuándo lo vimos»
+  los colaba después de un ancla y los contaba dos veces.
 
 ## cómo: cambiar el schema
 
@@ -134,6 +176,17 @@ construye la url como `ajax/` + el `data-ajax` del botón):
 4. comprobar el `when` en `meta/_journal.json`: el migrador aplica por `when`
 5. las migraciones se aplican solas al arrancar, dentro de `getDb()`
 6. **nunca editar una migración ya commiteada**
+
+## cómo: escribir muchas filas
+
+**nunca un `insert().values(fila).run()` por vuelta de bucle**: drizzle prepara un
+statement nuevo cada vez. cuando el poller de cláusulas pasó a barrer la liga
+entera (~511 jugadores) eso eran >1000 statements por pasada, y finalizarlos
+reventaba el binding nativo de better-sqlite3 **dentro del contenedor** con
+`RemoveEnvironmentCleanupHook: Assertion (env) != nullptr` (en el host con tsx no
+pasaba: solo crasheaba el build empaquetado). se agrupa con `chunked(rows, 50)` y
+`values(chunk)`; 50 mantiene las variables por sentencia (19 columnas × 50 = 950)
+por debajo del límite de sqlite. si añades una tabla ancha, revisa ese margen.
 
 ## cómo: añadir un poller
 
@@ -229,5 +282,5 @@ recurso no vale) y detección de replay que revoca la cadena entera del cliente.
   `/api/clauses` sigue viva **solo** para el mcp, no la consume la web.
 - ⏳ fase 5: acciones de escritura en ui, push, capacitor
 
-mientras la fase 1 no esté probada, **v2 sigue sincronizando**: perder eventos del
-feed a mitad de temporada es irrecuperable.
+v2 ya **no** sincroniza (timer systemd desactivado). tampoco importa: el feed se
+pagina hasta el principio, así que ningún hueco es irrecuperable.
