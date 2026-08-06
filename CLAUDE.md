@@ -139,6 +139,26 @@ los apaga para trabajar en local contra un snapshot.
 - commits: convencionales, en español minúscula. en este repo **se commitea**
   durante el turno (invierte la regla global).
 
+### diseño web (sistema de sis/duckhunt + identidad v1)
+
+- tokens **canónicos** como los siblings (`--bg`, `--bg-card`, `--accent`,
+  `--sp-1..6`...) más familias de dominio interpolables: `var(--pos-{1..4})`
+  (posiciones) y `var(--heat-{bucket})` (calor de racha v1). el bloque `--ui-*`
+  del final temiza `@platform/ui`.
+- `app.css` trae reset, defaults de elemento (button/input/checkbox custom) y
+  primitivas globales: `.data-table`, `.stats-grid`/`.stat-card`, `.card`,
+  `.muted/.error/.note/.empty`. las páginas **no** redefinen nada de eso.
+- el motivo skew de v1 vive en `lib/components/Chip.svelte` (color por
+  `style:--c` con un token, variantes solid/tint/glass); `PositionTag`, `Trend`
+  y `PlayerCard` componen sobre él.
+- shell: sidebar fija estilo sis en `routes/(app)/+layout.svelte` (colapso en
+  `lib/state/sidebar.svelte.ts`); en ≤768px pasa a tabbar inferior. `/login`
+  queda fuera del grupo `(app)` y por tanto sin shell.
+- estado ui: runas a nivel de módulo en `lib/state/*.svelte.ts` con getters,
+  nada de `svelte/store`.
+- `lib/api.ts` usa `createHttp` de `@platform/ui/http` (OfflineError ≠ 401; el
+  401 redirige a /login salvo estando ya allí).
+
 ## datos sensibles
 
 `data/`, `ledger.json` y `clauses.json` contienen nombres reales de los rivales y
