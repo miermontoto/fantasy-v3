@@ -43,6 +43,8 @@ export const POLL_INTERVAL = {
 	CLAUSES: 6 * 60 * 60 * 1000,
 	BALANCE: 60 * 60 * 1000,
 	STANDINGS: 6 * 60 * 60 * 1000,
+	/** una petición por jugador con dueño: cara, se espacia */
+	CLAUSE_DETAIL: 12 * 60 * 60 * 1000,
 } as const;
 
 export const POSITION = {

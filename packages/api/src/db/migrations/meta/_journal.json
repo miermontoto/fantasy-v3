@@ -36,6 +36,27 @@
       "when": 1786022045258,
       "tag": "0004_player_card_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1786024692549,
+      "tag": "0005_cash_anchor",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1786025014386,
+      "tag": "0006_clause_floor",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1786025185451,
+      "tag": "0007_purchase_price",
+      "breakpoints": true
     }
   ]
 }

@@ -115,6 +115,10 @@ export interface PlayerCommunityInfo {
 	shield: string;
 	/** tramo 1-5: determina el precio en créditos de escudos */
 	tier: number | null;
+	/** precio pagado en su último traspaso; null si nunca cambió de manos */
+	purchasePrice: number | null;
+	/** fecha del traspaso tal cual la da el juego ("3 ago 2026") */
+	purchaseDate: string | null;
 }
 
 export function parsePlayerCommunityInfo(data: unknown): PlayerCommunityInfo | null {
@@ -128,6 +132,9 @@ export function parsePlayerCommunityInfo(data: unknown): PlayerCommunityInfo | n
 
 	const rawShield = clause?.shield;
 	const ownerId = owner?.id === undefined || owner?.id === null ? null : String(owner.id);
+	const transfer = asRecord(p.transfer);
+	const rawPrice = transfer?.price;
+	const rawDate = transfer?.date;
 
 	return {
 		id: String(p.id),
@@ -142,6 +149,8 @@ export function parsePlayerCommunityInfo(data: unknown): PlayerCommunityInfo | n
 		clausePercentage: clause?.percentage === undefined ? 50 : num(clause.percentage),
 		shield: typeof rawShield === 'string' ? rawShield : '',
 		tier: clause?.tier === undefined ? null : num(clause.tier),
+		purchasePrice: typeof rawPrice === 'number' ? rawPrice : null,
+		purchaseDate: typeof rawDate === 'string' ? rawDate : null,
 	};
 }
 

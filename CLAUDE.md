@@ -91,6 +91,18 @@ construye la url como `ajax/` + el `data-ajax` del botón):
 - suelo mínimo de cláusula: **1.0M** (infla el ratio de los jugadores baratos).
 - los escudos cuestan créditos. tras un reset hay un escudo global (~12 días).
 - ⚠️ el campo `shield` del **listado miente**; solo `clause.shield` del detalle vale.
+- ⚠️⚠️ **`cláusula / valor` NO es el multiplicador**. el suelo es
+  `max(precio_pagado, valor_actual)`, así que ese ratio se mueve solo con el
+  mercado. deducir subidas de cláusula de él imputaba gasto inventado: a
+  Mourinheiro le cargaba 8.5M teniendo sus 14 jugadores en el 1.5 por defecto.
+  el multiplicador real y el precio pagado solo los da `player-community-info`,
+  que es lo que recoge el poller `clause-detail` (1 petición por jugador, 12h).
+- el baseline `200M − valor_de_plantilla` está **sesgado**: valora la plantilla a
+  precio de mercado, pero en las pujas se paga prima. la de Mourinheiro costó
+  240.7M y vale 212.5M. el sesgo NO se puede recuperar a posteriori (las
+  plantillas rotan y no se sabe quién estaba el día del baseline), así que se
+  corrige con anclas: `POST /api/anchors` fija el saldo real conocido de un
+  mánager y la estimación solo suma lo posterior.
 
 ### contabilidad
 - `max_bid = max(0, cash + 25% × valor_de_plantilla)`. el 25% es la deuda

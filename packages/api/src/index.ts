@@ -6,6 +6,7 @@ import { closeDb, getDb } from './db/connection.js';
 import { registerPoller, startAll, stopAll } from './services/poller-runner.js';
 import { feedPoller } from './services/pollers/feed.js';
 import { clausesPoller } from './services/pollers/clauses.js';
+import { clauseDetailPoller } from './services/pollers/clause-detail.js';
 import { standingsPoller } from './services/pollers/standings.js';
 import { VERSION } from './constants.js';
 
@@ -16,6 +17,7 @@ getDb();
 
 registerPoller(feedPoller);
 registerPoller(clausesPoller);
+registerPoller(clauseDetailPoller);
 registerPoller(standingsPoller);
 
 // DISABLE_POLLING=1 permite trabajar en local contra un snapshot de producción

@@ -125,8 +125,24 @@ export const playerSnapshot = sqliteTable(
 		/** null = agente libre */
 		ownerId: text('owner_id'),
 		clause: integer('clause'),
-		/** cláusula / valor: la cantidad que el dueño controla realmente */
+		/**
+		 * cláusula / valor. OJO: no es el multiplicador real. el suelo de la cláusula
+		 * es el PRECIO PAGADO y queda congelado, así que este ratio se mueve solo con
+		 * el valor de mercado. sirve para ordenar objetivos de robo, no para deducir
+		 * si el dueño ha subido la cláusula.
+		 */
 		clauseMultiplier: real('clause_multiplier'),
+		/**
+		 * suelo real de la cláusula = max(precio pagado, valor actual). solo lo da el
+		 * endpoint de detalle. NO sirve como coste: si el jugador se revaloriza por
+		 * encima de lo pagado, el suelo sigue al valor.
+		 */
+		clauseFloor: integer('clause_floor'),
+		/** precio pagado en el último traspaso: el coste real. null si nunca se fichó */
+		purchasePrice: integer('purchase_price'),
+		purchaseDate: text('purchase_date'),
+		/** multiplicador real (1.5 = por defecto). solo lo da el endpoint de detalle */
+		clauseMultiplierReal: real('clause_multiplier_real'),
 		/** 0 = sin escudo. ojo: el listado miente, solo el detalle es fiable */
 		shield: integer('shield').notNull().default(0),
 		listed: integer('listed', { mode: 'boolean' }).notNull().default(false),
@@ -331,4 +347,25 @@ export const mcpOauthRefreshToken = sqliteTable(
 		revokedAt: integer('revoked_at'),
 	},
 	(t) => [index('idx_mcp_refresh_expires').on(t.expiresAt)],
+);
+
+/**
+ * saldo conocido de un mánager en un instante: o bien lo publica el juego (el
+ * propio) o bien el mánager lo ha dicho. a partir de un ancla la estimación deja
+ * de arrastrar el error acumulado desde el reset: solo suma lo ocurrido después.
+ */
+export const cashAnchor = sqliteTable(
+	'cash_anchor',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		managerId: text('manager_id')
+			.notNull()
+			.references(() => manager.id),
+		ts: integer('ts').notNull(),
+		cash: integer('cash').notNull(),
+		/** api | disclosed: de dónde sale el dato */
+		source: text('source').notNull(),
+		note: text('note'),
+	},
+	(t) => [index('cash_anchor_manager_ts_idx').on(t.managerId, t.ts)],
 );

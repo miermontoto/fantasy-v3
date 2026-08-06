@@ -8,6 +8,8 @@ import ledger from './routes/ledger.js';
 import clauses from './routes/clauses.js';
 import players from './routes/players.js';
 import managers from './routes/managers.js';
+import baseline from './routes/baseline.js';
+import anchors from './routes/anchors.js';
 import sync from './routes/sync.js';
 import mcpHttp from './mcp/http.js';
 import oauthMcp from './routes/oauth-mcp.js';
@@ -56,6 +58,8 @@ app.route('/api/ledger', ledger);
 app.route('/api/clauses', clauses);
 app.route('/api/players', players);
 app.route('/api/managers', managers);
+app.route('/api/baseline', baseline);
+app.route('/api/anchors', anchors);
 app.route('/api/sync', sync);
 
 // la spa se monta siempre al final: hace fallback de cualquier ruta no-/api a 200.html

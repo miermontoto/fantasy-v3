@@ -98,13 +98,16 @@ export const clausesPoller: Poller = {
 				});
 			}
 
-			// comparar MULTIPLICADORES, no valores absolutos: la cláusula escala con el
-			// valor a multiplicador constante, así que comparar euros genera un evento
-			// falso cada día para casi toda la liga (bug real de v2).
+			// una subida de cláusula solo es real si cambia el multiplicador sobre el
+			// SUELO. como el listado no da el suelo, se compara la cláusula contra el
+			// suelo conocido de la pasada profunda; sin él no se emite evento, porque
+			// `cláusula / valor` se mueve cada día por el mercado y generaba cientos
+			// de subidas falsas.
+			const floor = before.clauseFloor;
 			const wasFloor = before.clause === CLAUSE.FLOOR && p.clause === CLAUSE.FLOOR;
-			const oldMultiplier = before.clauseMultiplier ?? 0;
-			const newMultiplier = p.clauseMultiplier ?? 0;
-			if (!wasFloor && Math.abs(newMultiplier - oldMultiplier) > MULTIPLIER_EPSILON) {
+			const oldMultiplier = floor ? (before.clause ?? 0) / floor : 0;
+			const newMultiplier = floor ? (p.clause ?? 0) / floor : 0;
+			if (floor && !wasFloor && Math.abs(newMultiplier - oldMultiplier) > MULTIPLIER_EPSILON) {
 				changes.push({
 					playerId: p.id,
 					ts: now,
