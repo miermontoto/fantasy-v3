@@ -1,0 +1,8 @@
+<!-- marca de fantasy: la "f" sobre el chip inclinado de v1, en verde césped -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+	<rect width="64" height="64" rx="8" fill="#0a0c0e"/>
+	<g transform="translate(5.6 0) skewX(-10)">
+		<rect x="14" y="16" width="36" height="32" rx="3" fill="#46d17f"/>
+	</g>
+	<text x="32" y="43" text-anchor="middle" font-family="monospace" font-size="30" font-weight="700" fill="#0a0c0e">f</text>
+</svg>
