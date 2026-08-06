@@ -1,12 +1,13 @@
-FROM node:22-slim AS build
+FROM node:24-trixie-slim AS build
 RUN npm install -g pnpm@10
 WORKDIR /app
 
 # dependencias de compilación para better-sqlite3
 RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
-# el scraper invoca curl como subproceso (igual que v2): cloudflare rechaza
-# clientes http genéricos, curl con la ua completa de chrome sí pasa
+# el scraper invoca curl como subproceso (igual que v2). la base es trixie por
+# su curl 8.x: cloudflare hace fingerprinting del handshake tls y rechaza tanto
+# el curl 7.88 de bookworm como el fetch nativo de node (ambos dan 403).
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # instalar dependencias (platform/ = submodule con los paquetes @platform/* en fuente ts)
@@ -27,7 +28,7 @@ RUN pnpm --filter @fantasy/web build \
     && pnpm --filter @fantasy/api build
 
 # --- producción ---
-FROM node:22-slim AS production
+FROM node:24-trixie-slim AS production
 WORKDIR /app/packages/api
 
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*

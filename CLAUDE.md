@@ -58,6 +58,10 @@ db ←── queries ←── services ←── routes
   `id_community`, temporada, saldos por comunidad y feature flags. renovar el
   X-Auth = pedir `/feed` con la cookie y extraerlo de ahí.
 - cloudflare bloquea user-agents cortos: mandar siempre `USER_AGENT` completo.
+- ⚠️ cloudflare **hace fingerprinting del handshake tls**, no solo de las cabeceras.
+  curl 8.x pasa; el curl 7.88 de debian bookworm y el `fetch` nativo de node dan
+  403 aunque manden exactamente las mismas cabeceras. de ahí que la imagen sea
+  `node:24-trixie-slim` (curl 8.14) y que el scraper invoque curl en vez de fetch.
 
 ### endpoints ajax
 la web registra `sws['clave'] = {post: 'nombre'}` → `POST /ajax/sw/{clave}` con
