@@ -17,7 +17,7 @@
 import { CLAUSE } from '../constants.js';
 import { latestAnchor } from '../queries/anchors.js';
 import { accountableTransfers } from '../queries/transfers.js';
-import { latestOwnedSnapshots, recentClauseChanges } from '../queries/players.js';
+import { latestClauseDetails, latestOwnedSnapshots, recentClauseChanges } from '../queries/players.js';
 import { clauseLadderCost, clauseSteps } from '../scraper/json.js';
 import { getDb } from '../db/connection.js';
 import { balanceMovement, manager } from '../db/schema.js';
@@ -85,6 +85,9 @@ export function estimateClauseSpend(communityId: string, managerId: string, sinc
 		return Math.round(spend);
 	}
 
+	// multiplicadores reales, de la última fila que los traiga por jugador
+	const details = latestClauseDetails(communityId);
+
 	// último precio pagado por cada jugador: tras una compra la cláusula base es
 	// 1.5x el PRECIO pagado, no 1.5x el valor. sin esto, quien pague una prima alta
 	// (p.ej. 145M por un jugador de 82M) aparece como si hubiera subido la cláusula.
@@ -101,11 +104,18 @@ export function estimateClauseSpend(communityId: string, managerId: string, sinc
 		// saber si la cláusula está subida: `cláusula / valor` se mueve solo con el
 		// mercado porque el suelo es el precio pagado y está congelado. sin dato
 		// fiable no se imputa nada: es preferible subestimar a inventar gasto.
-		const multiplier = snapshot.clauseMultiplierReal;
+		//
+		// se busca en la última fila que TRAIGA multiplicador, no en la más reciente:
+		// el barrido de cláusulas escribe la liga entera sin ese campo y taparía a
+		// las filas enriquecidas del poller de detalle.
+		const detail = details.get(snapshot.playerId);
+		if (!detail || detail.ownerId !== snapshot.ownerId) continue;
+
+		const multiplier = detail.clauseMultiplierReal;
 		if (multiplier === null || multiplier <= CLAUSE.BASE_MULTIPLIER) continue;
 
 		// el escalón se paga sobre el suelo, que es el precio pagado
-		const base = snapshot.clauseFloor ?? paidFor.get(snapshot.playerId) ?? snapshot.value;
+		const base = detail.clauseFloor ?? paidFor.get(snapshot.playerId) ?? snapshot.value;
 		const steps = (multiplier - CLAUSE.BASE_MULTIPLIER) / CLAUSE.STEP_SIZE;
 		spend += clauseLadderCost(base, 0, steps);
 	}

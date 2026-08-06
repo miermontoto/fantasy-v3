@@ -1,6 +1,6 @@
 // jugadores y sus snapshots (valor, cláusula, dueño, escudo) en el tiempo.
 
-import { and, desc, eq, gte, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNotNull, sql } from 'drizzle-orm';
 import { getDb } from '../db/connection.js';
 import { player, playerSnapshot, clauseChange } from '../db/schema.js';
 
@@ -90,6 +90,35 @@ export function latestOwnedSnapshots(communityId: string) {
 	return latestSnapshots(communityId).filter((row) => row.ownerId !== null);
 }
 
+/**
+ * último snapshot de cada jugador que TRAE multiplicador real de cláusula.
+ *
+ * dos pollers escriben en la misma tabla con distinta riqueza: el de cláusulas
+ * barre la liga entera pero solo sabe el valor de la cláusula, y el de detalle
+ * añade el multiplicador y el suelo de verdad, un jugador por petición. como el
+ * barrido es más frecuente, sus filas tapan a las enriquecidas si uno se queda con
+ * «la última»: el gasto en cláusulas se iba a cero para toda la liga sin avisar.
+ *
+ * se descarta la fila cuyo dueño ya no es el actual: al cambiar de manos la
+ * cláusula vuelve al 1.5 por defecto, así que arrastrar la subida del dueño
+ * anterior se la cobraría al nuevo.
+ */
+export function latestClauseDetails(communityId: string) {
+	const db = getDb();
+	const rows = db
+		.select()
+		.from(playerSnapshot)
+		.where(and(eq(playerSnapshot.communityId, communityId), isNotNull(playerSnapshot.clauseMultiplierReal)))
+		.orderBy(desc(playerSnapshot.ts))
+		.all();
+
+	const seen = new Map<string, (typeof rows)[number]>();
+	for (const row of rows) {
+		if (!seen.has(row.playerId)) seen.set(row.playerId, row);
+	}
+	return seen;
+}
+
 /** serie temporal de un jugador: alimenta los gráficos de valor y cláusula */
 export function playerHistory(playerId: string, sinceTs: number) {
 	return getDb()
@@ -174,7 +203,13 @@ function toRosterEntry(
  * liga entera, que es como se buscan objetivos de cláusula sin tablero aparte.
  */
 export function roster(communityId: string, ownerId?: string | null): RosterEntry[] {
-	const players = new Map(getDb().select().from(player).all().map((p) => [p.id, p]));
+	const players = new Map(
+		getDb()
+			.select()
+			.from(player)
+			.all()
+			.map((p) => [p.id, p]),
+	);
 	// sin dueño concreto se devuelve la liga entera INCLUIDOS los agentes libres:
 	// lo que se puede fichar no es solo lo que ya tiene dueño
 	const snapshots = ownerId ? latestOwnedSnapshots(communityId) : latestSnapshots(communityId);
@@ -196,7 +231,12 @@ export function playerCards(playerIds: string[]): Map<string, RosterEntry> {
 	const unique = [...new Set(playerIds)];
 
 	const players = new Map(
-		db.select().from(player).where(inArray(player.id, unique)).all().map((p) => [p.id, p]),
+		db
+			.select()
+			.from(player)
+			.where(inArray(player.id, unique))
+			.all()
+			.map((p) => [p.id, p]),
 	);
 	const rows = db
 		.select()
