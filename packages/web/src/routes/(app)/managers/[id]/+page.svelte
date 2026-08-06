@@ -3,7 +3,8 @@
 	// mirar la plantilla de un rival es cómo se localizan objetivos de cláusula.
 	import { api, type RosterPlayer, type ManagerInfo, type ManagerRow } from '$lib/api';
 	import { money, position } from '$lib/format';
-	import PlayerCard from '$lib/PlayerCard.svelte';
+	import Chip from '$lib/components/Chip.svelte';
+	import PlayerCard from '$lib/components/PlayerCard.svelte';
 	import { page } from '$app/state';
 
 	let players = $state<RosterPlayer[]>([]);
@@ -12,7 +13,7 @@
 	let error = $state<string | null>(null);
 	let loading = $state(true);
 
-	// filtro de posición tri-estado como en v1: sin selección = todas
+	// filtro de posición como en v1: sin selección = todas
 	let positions = $state<Set<number>>(new Set());
 	let search = $state('');
 	let onlyStealable = $state(false);
@@ -62,7 +63,10 @@
 	});
 </script>
 
-<h1>{current?.name ?? 'plantilla'}{#if current?.isSelf}<span class="tag">tú</span>{/if}</h1>
+<h1>
+	{current?.name ?? 'plantilla'}
+	{#if current?.isSelf}<Chip c="var(--accent)" variant="tint">tú</Chip>{/if}
+</h1>
 
 <nav class="managers">
 	{#each managers as m (m.id)}
@@ -78,8 +82,12 @@
 	<div class="filters">
 		<div class="positions">
 			{#each [1, 2, 3, 4] as pos (pos)}
-				<button class="pos pos-{pos}" class:on={positions.has(pos)} onclick={() => togglePosition(pos)}>
-					{position(pos)}
+				<button
+					style:--c={`var(--pos-${pos})`}
+					class:on={positions.has(pos)}
+					onclick={() => togglePosition(pos)}
+				>
+					<span>{position(pos)}</span>
 				</button>
 			{/each}
 		</div>
@@ -90,40 +98,38 @@
 				solo robables con {money(budget)}
 			</label>
 		{/if}
-		<span class="totals">{filtered.length} jug. · {money(totals.value)} · cláusulas {money(totals.clause)}</span>
+		<span class="totals">
+			{filtered.length} jug. · {money(totals.value)} · cláusulas {money(totals.clause)}
+		</span>
 	</div>
 
 	<div class="list">
 		{#each filtered as player (player.playerId)}
 			<PlayerCard {player} budget={current?.isSelf ? null : budget} />
 		{:else}
-			<p class="muted">sin jugadores que cumplan el filtro</p>
+			<p class="empty">sin jugadores que cumplan el filtro</p>
 		{/each}
 	</div>
 {/if}
 
 <style>
 	h1 {
-		font-size: 1.1rem;
-		font-weight: 600;
-		margin: 0 0 0.75rem;
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
+		gap: var(--sp-2);
 	}
 	.managers {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.4rem;
-		margin-bottom: 1rem;
+		gap: var(--sp-1);
+		margin-bottom: var(--sp-4);
 	}
 	.managers a {
 		font-size: 0.75rem;
 		color: var(--text-muted);
-		text-decoration: none;
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
-		padding: 0.15rem 0.4rem;
+		padding: 0.15rem var(--sp-2);
 		max-width: 12rem;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -138,72 +144,48 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 0.75rem;
-		margin-bottom: 0.5rem;
+		gap: var(--sp-3);
+		margin-bottom: var(--sp-2);
 		font-size: 0.8rem;
 		color: var(--text-muted);
 	}
 	.filters label {
 		display: flex;
 		align-items: center;
-		gap: 0.3rem;
+		gap: var(--sp-1);
 		cursor: pointer;
 	}
 	.positions {
 		display: flex;
-		gap: 0.25rem;
+		gap: var(--sp-1);
 	}
+	/* botones de posición con el skew de v1: apagados en contorno, encendidos
+	   en sólido del color de la posición */
 	.positions button {
-		font: inherit;
+		transform: skewX(var(--skew));
 		font-size: 0.7rem;
-		font-weight: 600;
-		background: none;
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		padding: 0.15rem 0.45rem;
-		cursor: pointer;
-		opacity: 0.5;
+		font-weight: 700;
+		padding: 2px var(--sp-3);
+		color: var(--c);
+		opacity: 0.45;
+	}
+	.positions button span {
+		display: block;
+		transform: skewX(var(--unskew));
+	}
+	.positions button:hover {
+		opacity: 0.8;
+		background: transparent;
+		border-color: var(--c);
 	}
 	.positions button.on {
 		opacity: 1;
-		border-color: currentColor;
-	}
-	.pos-1 {
-		color: var(--pos-gk);
-	}
-	.pos-2 {
-		color: var(--pos-def);
-	}
-	.pos-3 {
-		color: var(--pos-mid);
-	}
-	.pos-4 {
-		color: var(--pos-fwd);
-	}
-	input[type='search'] {
-		font: inherit;
-		font-size: 0.8rem;
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		color: var(--text);
-		padding: 0.2rem 0.4rem;
+		background: var(--c);
+		border-color: var(--c);
+		color: var(--on-accent);
 	}
 	.totals {
 		margin-left: auto;
 		font-variant-numeric: tabular-nums;
-	}
-	.tag {
-		font-size: 0.65rem;
-		color: var(--accent);
-		border: 1px solid var(--accent);
-		padding: 0 0.25rem;
-		border-radius: var(--radius);
-	}
-	.muted {
-		color: var(--text-muted);
-	}
-	.error {
-		color: var(--danger);
 	}
 </style>
