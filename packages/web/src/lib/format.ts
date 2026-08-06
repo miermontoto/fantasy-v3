@@ -10,6 +10,22 @@ export function signedMoney(value: number): string {
 	return `${value > 0 ? '+' : ''}${money(value)}`;
 }
 
+const THOUSAND = 1_000;
+const MILLION = 1_000_000;
+
+/**
+ * delta de valor. los cambios diarios de mercado son de decenas de miles y en
+ * millones se leen todos como «0.00M», así que por debajo del millón se muestran
+ * en miles. es la única excepción a leer el dinero en millones, y existe justo
+ * para que un cambio pequeño no parezca ausencia de cambio.
+ */
+export function signedDelta(value: number): string {
+	const sign = value > 0 ? '+' : value < 0 ? '-' : '';
+	const abs = Math.abs(value);
+	if (abs < MILLION) return `${sign}${Math.round(abs / THOUSAND)}k`;
+	return `${sign}${(abs / MILLION).toFixed(2)}M`;
+}
+
 /** clase css según el signo, para no repetir ternarios en las plantillas */
 export function trendClass(value: number): string {
 	if (value > 0) return 'up';

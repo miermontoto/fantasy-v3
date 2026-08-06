@@ -1,9 +1,11 @@
 <script lang="ts">
 	// ficha con la evolución de valor y cláusula: es lo que ninguna versión anterior
 	// pudo mostrar, porque hasta v3 no se guardaba histórico.
-	import { api, type PlayerInfo, type PlayerPoint } from '$lib/api';
+	import { api, type ActivityActor, type ActivityEvent, type PlayerInfo, type PlayerPoint } from '$lib/api';
 	import { money } from '$lib/format';
 	import Chip from '$lib/components/Chip.svelte';
+	import EventCard from '$lib/components/EventCard.svelte';
+	import ManagerTag from '$lib/components/ManagerTag.svelte';
 	import PositionTag from '$lib/components/PositionTag.svelte';
 	import Trend from '$lib/components/Trend.svelte';
 	import { page } from '$app/state';
@@ -14,9 +16,13 @@
 
 	echarts.use([LineChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
 
+	const HISTORY_DAYS = 60;
+	const EVENT_LIMIT = 20;
+
 	let info = $state<PlayerInfo | null>(null);
 	let history = $state<PlayerPoint[]>([]);
-	let ownerName = $state<string | null>(null);
+	let owner = $state<ActivityActor | null>(null);
+	let events = $state<ActivityEvent[]>([]);
 	let error = $state<string | null>(null);
 	let chartEl = $state<HTMLDivElement | null>(null);
 	let photoBroken = $state(false);
@@ -24,17 +30,15 @@
 	$effect(() => {
 		const id = page.params.id;
 		if (!id) return;
-		api
-			.player(id, 60)
-			.then((data) => {
+		Promise.all([api.player(id, HISTORY_DAYS), api.activity(EVENT_LIMIT, id), api.ledger()])
+			.then(([data, feed, ledger]) => {
 				info = data.player;
 				history = data.history;
+				events = feed.events;
 				// el dueño sale del ledger: el snapshot solo trae su id
 				const ownerId = data.history.at(-1)?.ownerId ?? null;
-				if (!ownerId) return;
-				return api.ledger().then((l) => {
-					ownerName = l.managers.find((m) => m.managerId === ownerId)?.name ?? null;
-				});
+				const row = ownerId ? ledger.managers.find((m) => m.managerId === ownerId) : null;
+				owner = row ? { id: row.managerId, name: row.name, isSelf: row.isSelf } : null;
 			})
 			.catch((err: Error) => (error = err.message));
 	});
@@ -95,7 +99,7 @@
 			<h1>{info.name}</h1>
 			<div class="meta">
 				<PositionTag position={info.position} />
-				{#if ownerName}<Chip variant="glass" title="dueño actual">{ownerName}</Chip>{/if}
+				{#if owner}<ManagerTag actor={owner} />{/if}
 				{#if latest && latest.shield !== 0}
 					<Chip c="var(--warning)" variant="tint">blindado ⛨</Chip>
 				{/if}
@@ -134,6 +138,13 @@
 			poller de cláusulas.
 		</p>
 	{/if}
+
+	<h2 class="section-title feed-title">actividad</h2>
+	{#each events as event (event.id)}
+		<EventCard {event} />
+	{:else}
+		<p class="empty">sin movimientos registrados para este jugador</p>
+	{/each}
 {:else}
 	<p class="muted">cargando…</p>
 {/if}
@@ -183,5 +194,8 @@
 		width: 100%;
 		height: 320px;
 		padding: var(--sp-2);
+	}
+	.feed-title {
+		margin-top: var(--sp-5);
 	}
 </style>

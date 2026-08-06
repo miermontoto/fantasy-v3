@@ -38,41 +38,28 @@ export interface ManagerRow {
 	ts: number;
 }
 
-export interface StealTarget {
-	playerId: string;
+/** un mánager implicado en un evento del feed */
+export interface ActivityActor {
+	id: string;
 	name: string;
-	position: number;
-	ownerName: string;
-	value: number;
-	clause: number;
-	ratio: number;
-	atFloor: boolean;
-	shielded: boolean;
-	listed: boolean;
-	affordable: boolean;
-	isOwn: boolean;
+	isSelf: boolean;
 }
 
-export interface ClauseChange {
-	playerId: string;
-	name: string;
+export interface ActivityEvent {
+	id: string;
+	ts: number;
+	group: 'transfer' | 'clause';
 	kind: string;
-	ownerName: string | null;
-	prevOwnerName: string | null;
+	/** null = el mercado, no un mánager */
+	from: ActivityActor | null;
+	to: ActivityActor | null;
+	price: number | null;
 	oldClause: number | null;
 	newClause: number | null;
-	ts: number;
-}
-
-export interface TransferRow {
-	id: number;
 	playerId: string;
 	playerName: string;
-	fromManagerId: string | null;
-	toManagerId: string | null;
-	price: number;
-	kind: string;
-	seenAt: number;
+	/** tarjeta del jugador; null si aún no hay snapshot suyo */
+	player: RosterPlayer | null;
 }
 
 export interface PlayerInfo {
@@ -107,6 +94,8 @@ export interface RosterPlayer {
 	clausesRank: number | null;
 	status: string | null;
 	streak: (number | null)[];
+	/** null = agente libre */
+	ownerId: string | null;
 }
 
 export interface ManagerInfo {
@@ -133,20 +122,18 @@ export const api = {
 		http.get<{ history: { ts: number; cash: number; teamValue: number; maxBid: number }[] }>(
 			`/ledger/history/${id}?days=${days}`,
 		),
-	transfers: (limit = 60) => http.get<{ transfers: TransferRow[] }>(`/ledger/transfers?limit=${limit}`),
-	clauses: (params: { budget?: number; excludeOwn?: boolean; hideShielded?: boolean; limit?: number } = {}) => {
-		const q = new URLSearchParams();
-		if (params.budget !== undefined) q.set('budget', String(params.budget));
-		if (params.excludeOwn) q.set('excludeOwn', 'true');
-		if (params.hideShielded) q.set('hideShielded', 'true');
-		q.set('limit', String(params.limit ?? 60));
-		return http.get<{ targets: StealTarget[] }>(`/clauses?${q}`);
+	/** feed unificado; sin `player` es toda la liga, con él la ficha de uno */
+	activity: (limit = 60, playerId?: string) => {
+		const q = new URLSearchParams({ limit: String(limit) });
+		if (playerId) q.set('player', playerId);
+		return http.get<{ events: ActivityEvent[] }>(`/activity?${q}`);
 	},
-	clauseChanges: (limit = 40) => http.get<{ changes: ClauseChange[] }>(`/clauses/changes?limit=${limit}`),
 	player: (id: string, days = 30) =>
 		http.get<{ player: PlayerInfo; history: PlayerPoint[] }>(`/players/${id}?days=${days}`),
 	managers: () => http.get<{ managers: ManagerInfo[] }>('/managers'),
-	roster: (id: string) => http.get<{ players: RosterPlayer[] }>(`/managers/${id}/roster`),
+	/** sin id devuelve la plantilla de la liga entera */
+	roster: (id?: string | null) =>
+		http.get<{ players: RosterPlayer[] }>(id ? `/managers/${id}/roster` : '/managers/roster'),
 	pollers: () => http.get<{ pollers: PollerRow[] }>('/sync'),
 	runPoller: (name: string) => http.post<{ ok: boolean; error?: string }>(`/sync/${name}`),
 };

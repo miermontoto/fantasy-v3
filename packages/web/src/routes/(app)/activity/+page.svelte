@@ -1,24 +1,34 @@
 <script lang="ts">
-	// actividad de la liga: traspasos con precio exacto y cambios de cláusula.
-	// también el estado de los pollers, que es lo que garantiza que no falte nada.
-	import { api, type TransferRow, type ClauseChange, type PollerRow } from '$lib/api';
-	import { money, relativeTime } from '$lib/format';
-	import Chip from '$lib/components/Chip.svelte';
+	// actividad de la liga en una sola línea temporal: traspasos y cambios de
+	// cláusula mezclados por fecha, cada uno con quién lo hizo y la tarjeta del
+	// jugador. arriba, el estado de los pollers, que es lo que garantiza que el
+	// feed no se haya dejado nada por el camino.
+	import { api, type ActivityEvent, type ManagerRow, type PollerRow } from '$lib/api';
+	import { relativeTime } from '$lib/format';
+	import EventCard from '$lib/components/EventCard.svelte';
 
-	let transfers = $state<TransferRow[]>([]);
-	let changes = $state<ClauseChange[]>([]);
+	const LIMIT = 60;
+
+	let events = $state<ActivityEvent[]>([]);
 	let pollers = $state<PollerRow[]>([]);
+	let self = $state<ManagerRow | null>(null);
 	let error = $state<string | null>(null);
+	let loading = $state(true);
 	let syncing = $state<string | null>(null);
+	let filter = $state<'all' | 'transfer' | 'clause'>('all');
 
 	function load() {
-		Promise.all([api.transfers(40), api.clauseChanges(40), api.pollers()])
-			.then(([t, c, p]) => {
-				transfers = t.transfers;
-				changes = c.changes;
+		Promise.all([api.activity(LIMIT), api.pollers(), api.ledger()])
+			.then(([a, p, l]) => {
+				events = a.events;
 				pollers = p.pollers;
+				self = l.managers.find((m) => m.isSelf) ?? null;
+				loading = false;
 			})
-			.catch((err: Error) => (error = err.message));
+			.catch((err: Error) => {
+				error = err.message;
+				loading = false;
+			});
 	}
 
 	$effect(load);
@@ -35,21 +45,32 @@
 		}
 	}
 
-	const KIND_LABEL: Record<string, string> = {
-		clause_up: 'subió cláusula',
-		clause_down: 'bajó cláusula',
-		shield_on: 'blindó',
-		shield_off: 'expiró escudo',
-		owner_change: 'cambió de dueño',
-		acquired: 'fichado',
-		released: 'liberado',
-	};
-	// color por tipo de evento: subidas avisan, oportunidades destacan
-	const KIND_COLOR: Record<string, string> = {
-		clause_up: 'var(--warning)',
-		shield_off: 'var(--accent)',
-		owner_change: 'var(--accent)',
-	};
+	const visible = $derived(events.filter((e) => filter === 'all' || e.group === filter));
+
+	const DAY_MS = 86_400_000;
+
+	/** distancia en días naturales al de hoy, no en múltiplos de 24 h */
+	function dayLabel(ts: number): string {
+		const start = new Date();
+		start.setHours(0, 0, 0, 0);
+		const elapsed = Math.floor((start.getTime() - ts) / DAY_MS);
+		if (elapsed < 0) return 'hoy';
+		if (elapsed === 0) return 'ayer';
+		return new Date(ts).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+	}
+
+	// el feed se agrupa por día: sin cortes, una lista larga de «hace 3 h» no deja
+	// ver dónde acaba lo de hoy y empieza lo de ayer
+	const days = $derived.by(() => {
+		const groups: { label: string; events: ActivityEvent[] }[] = [];
+		for (const event of visible) {
+			const label = dayLabel(event.ts);
+			const last = groups.at(-1);
+			if (last?.label === label) last.events.push(event);
+			else groups.push({ label, events: [event] });
+		}
+		return groups;
+	});
 </script>
 
 <h1>actividad</h1>
@@ -68,46 +89,32 @@
 	{/each}
 </section>
 
-<div class="columns">
-	<section class="card">
-		<h2 class="section-title">traspasos</h2>
-		<ul class="feed">
-			{#each transfers as t (t.id)}
-				<li>
-					<span class="player"><a href="/players/{t.playerId}">{t.playerName}</a></span>
-					{#if t.kind === 'clause'}<Chip c="var(--warning)" variant="tint">clausulazo</Chip>{/if}
-					<span class="price" class:clause={t.kind === 'clause'}>{money(t.price)}</span>
-					<span class="when">{relativeTime(t.seenAt)}</span>
-				</li>
-			{:else}
-				<li class="empty">sin traspasos registrados</li>
-			{/each}
-		</ul>
-	</section>
-
-	<section class="card">
-		<h2 class="section-title">cláusulas</h2>
-		<ul class="feed">
-			{#each changes as c (c.playerId + c.ts + c.kind)}
-				<li>
-					<span class="player"><a href="/players/{c.playerId}">{c.name}</a></span>
-					<Chip c={KIND_COLOR[c.kind] ?? null} variant="tint">{KIND_LABEL[c.kind] ?? c.kind}</Chip>
-					{#if c.newClause}<span class="price">{money(c.newClause)}</span>{/if}
-					<span class="when">{relativeTime(c.ts)}</span>
-				</li>
-			{:else}
-				<li class="empty">sin cambios registrados</li>
-			{/each}
-		</ul>
-	</section>
+<div class="filters">
+	<button class:on={filter === 'all'} onclick={() => (filter = 'all')}>todo</button>
+	<button class:on={filter === 'transfer'} onclick={() => (filter = 'transfer')}>traspasos</button>
+	<button class:on={filter === 'clause'} onclick={() => (filter = 'clause')}>cláusulas</button>
+	<span class="count">{visible.length} eventos</span>
 </div>
+
+{#if loading}
+	<p class="muted">cargando…</p>
+{:else}
+	{#each days as day (day.label)}
+		<h2 class="section-title day">{day.label}</h2>
+		{#each day.events as event (event.id)}
+			<EventCard {event} budget={self?.maxBid ?? null} />
+		{/each}
+	{:else}
+		<p class="empty">sin actividad registrada todavía</p>
+	{/each}
+{/if}
 
 <style>
 	.pollers {
 		display: flex;
 		gap: var(--sp-2);
 		flex-wrap: wrap;
-		margin-bottom: var(--sp-5);
+		margin-bottom: var(--sp-4);
 	}
 	.pollers button {
 		display: flex;
@@ -132,37 +139,33 @@
 		color: var(--danger);
 		font-size: 0.7rem;
 	}
-	.columns {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-		gap: var(--sp-4);
-		align-items: start;
-	}
-	.feed {
-		list-style: none;
-		font-size: 0.8rem;
-	}
-	.feed li {
+	.filters {
 		display: flex;
-		align-items: baseline;
-		gap: var(--sp-2);
-		padding: 0.35rem 0;
+		align-items: center;
+		gap: var(--sp-1);
+		margin-bottom: var(--sp-4);
+	}
+	.filters button {
+		font-size: 0.75rem;
+		padding: 2px var(--sp-3);
+		color: var(--text-muted);
+	}
+	.filters button.on {
+		color: var(--accent);
+		border-color: var(--accent);
+	}
+	.count {
+		margin-left: auto;
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+	.day {
+		position: sticky;
+		top: 0;
+		z-index: 1;
+		background: var(--bg);
+		padding: var(--sp-2) 0;
+		margin-bottom: var(--sp-2);
 		border-bottom: 1px solid var(--border);
-	}
-	.feed li:last-child {
-		border-bottom: none;
-	}
-	.player {
-		flex: 1;
-		min-width: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	.price {
-		font-variant-numeric: tabular-nums;
-	}
-	.price.clause {
-		color: var(--warning);
 	}
 </style>

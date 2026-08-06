@@ -6,6 +6,7 @@ import health from './routes/health.js';
 import auth from './routes/auth.js';
 import ledger from './routes/ledger.js';
 import clauses from './routes/clauses.js';
+import activity from './routes/activity.js';
 import players from './routes/players.js';
 import managers from './routes/managers.js';
 import baseline from './routes/baseline.js';
@@ -55,7 +56,10 @@ app.use(
 );
 
 app.route('/api/ledger', ledger);
+// el tablero de cláusulas ya no tiene página propia, pero la consulta sigue
+// sirviendo al mcp (fantasy_steal_targets)
 app.route('/api/clauses', clauses);
+app.route('/api/activity', activity);
 app.route('/api/players', players);
 app.route('/api/managers', managers);
 app.route('/api/baseline', baseline);

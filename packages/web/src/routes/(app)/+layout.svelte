@@ -11,10 +11,9 @@
 	let version = $state<string | null>(null);
 
 	// iconos de navegación: markup svg estático (trazo feather 24×24); un
-	// registro de glifos aparte no compensa para cuatro entradas.
+	// registro de glifos aparte no compensa para tres entradas.
 	const NAV = [
 		{ href: '/', label: 'liga', icon: '<path d="M18 20V10M12 20V4M6 20v-6"/>' },
-		{ href: '/clauses', label: 'cláusulas', icon: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' },
 		{
 			href: '/managers',
 			label: 'plantillas',

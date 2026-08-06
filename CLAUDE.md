@@ -33,7 +33,7 @@ packages/api/src/
   db/          schema.ts + connection.ts + migrations/. no conoce hono ni servicios
   scraper/     cliente http (curl) + parsers html/json de fantasy.marca.com
   queries/     lecturas/escrituras tipadas sobre drizzle. sin saber de transporte
-  services/    orquestan queries: ledger, clauses, ratings, pollers
+  services/    orquestan queries: ledger, clauses, activity, ratings, pollers
   routes/      envoltorios finos: validar → llamar query → devolver
   mcp/         hermano de routes: mismas queries, otra superficie (fase 2)
 ```
@@ -97,6 +97,12 @@ construye la url como `ajax/` + el `data-ajax` del botón):
   Mourinheiro le cargaba 8.5M teniendo sus 14 jugadores en el 1.5 por defecto.
   el multiplicador real y el precio pagado solo los da `player-community-info`,
   que es lo que recoge el poller `clause-detail` (1 petición por jugador, 12h).
+- ⚠️ los `clause_change` de tipo `clause_up` guardados hasta ahora traen
+  `oldClause = 0` (los 16 que hay): el diff los emite así cuando el snapshot
+  previo no tenía cláusula, y son en su mayoría **falsos positivos** de la
+  primera pasada, no subidas reales. la ui no pinta el salto si la cláusula
+  anterior es 0, porque «0.00M → 4.76M» se lee como que no tenía cláusula.
+  el filtro del poller sigue pendiente de endurecer.
 - el baseline `200M − valor_de_plantilla` está **sesgado**: valora la plantilla a
   precio de mercado, pero en las pujas se paga prima. la de Mourinheiro costó
   240.7M y vale 212.5M. el sesgo NO se puede recuperar a posteriori (las
@@ -161,8 +167,16 @@ los apaga para trabajar en local contra un snapshot.
   primitivas globales: `.data-table`, `.stats-grid`/`.stat-card`, `.card`,
   `.muted/.error/.note/.empty`. las páginas **no** redefinen nada de eso.
 - el motivo skew de v1 vive en `lib/components/Chip.svelte` (color por
-  `style:--c` con un token, variantes solid/tint/glass); `PositionTag`, `Trend`
-  y `PlayerCard` componen sobre él.
+  `style:--c` con un token, variantes solid/tint/glass); `PositionTag`, `Trend`,
+  `ManagerTag`, `PlayerCard` y `ManagerCard` componen sobre él.
+- **dos entidades, dos tarjetas con la misma anatomía**: `PlayerCard` y
+  `ManagerCard` comparten raíl izquierdo, centro con nombre y cifras, y dato
+  fuerte a la derecha. una vista nueva compone estas tarjetas, no inventa una
+  tercera forma de listar. `EventCard` envuelve a `PlayerCard` con la cabecera
+  de quién/cuánto, y `RosterView` es el visor de plantillas que usan tanto
+  `/managers` (liga entera) como `/managers/[id]`.
+- una referencia a un mánager es SIEMPRE `ManagerTag`, nunca texto suelto: así
+  cualquier nombre enlaza a su plantilla desde cualquier vista.
 - shell: sidebar fija estilo sis en `routes/(app)/+layout.svelte` (colapso en
   `lib/state/sidebar.svelte.ts`); en ≤768px pasa a tabbar inferior. `/login`
   queda fuera del grupo `(app)` y por tanto sin shell.
@@ -207,8 +221,12 @@ recurso no vale) y detección de replay que revoca la cadena entera del cliente.
 - ✅ fase 0: scaffolding (submódulo, workspace, docker, schema, poller-runner, health)
 - ✅ fase 1: scraper portado, pollers feed/clauses/standings, backfill de v2
 - ✅ fase 2: api de inteligencia + mcp (7 tools, stdio + http en /mcp)
-- ✅ fase 3: dashboard de inteligencia (liga, cláusulas, actividad, ficha con gráfico)
+- ✅ fase 3: dashboard de inteligencia (liga, actividad, ficha con gráfico)
 - ✅ fase 4: paridad con v1 (tarjeta de jugador, filtros, visor de plantillas)
+- ✅ fase 4.1: rediseño uniforme. tres secciones (liga / plantillas / actividad).
+  la página de cláusulas **se eliminó**: su trabajo lo hace `/managers` con el
+  visor en modo «toda la liga» (orden por cláusula + filtro «solo robables»).
+  `/api/clauses` sigue viva **solo** para el mcp, no la consume la web.
 - ⏳ fase 5: acciones de escritura en ui, push, capacitor
 
 mientras la fase 1 no esté probada, **v2 sigue sincronizando**: perder eventos del

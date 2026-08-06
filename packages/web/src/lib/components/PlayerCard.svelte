@@ -2,9 +2,10 @@
 	// tarjeta de jugador con la anatomía de v1: raíl de posición y puntos, foto,
 	// nombre con valor y tendencia, racha con escala de calor y cláusula. sin
 	// escudo de equipo ni próximo rival porque v3 no scrapea esos datos.
-	import type { RosterPlayer } from '$lib/api';
+	import type { ActivityActor, RosterPlayer } from '$lib/api';
 	import { money } from '$lib/format';
 	import Chip from '$lib/components/Chip.svelte';
+	import ManagerTag from '$lib/components/ManagerTag.svelte';
 	import PositionTag from '$lib/components/PositionTag.svelte';
 	import Trend from '$lib/components/Trend.svelte';
 
@@ -12,8 +13,10 @@
 		player: RosterPlayer;
 		/** presupuesto con el que comparar la cláusula; null = no marcar */
 		budget?: number | null;
+		/** dueño a mostrar; solo hace falta cuando la lista mezcla plantillas */
+		owner?: ActivityActor | null;
 	}
-	let { player, budget = null }: Props = $props();
+	let { player, budget = null, owner = null }: Props = $props();
 	let photoBroken = $state(false);
 
 	const trend = $derived(player.prevValue ? player.value - player.prevValue : 0);
@@ -64,11 +67,19 @@
 	{/if}
 
 	<div class="center">
-		<a class="name" href="/players/{player.playerId}">{player.name}</a>
+		<div class="head">
+			<a class="name" href="/players/{player.playerId}">{player.name}</a>
+			{#if owner}<ManagerTag actor={owner} />{/if}
+		</div>
 		<div class="line">
 			<span class="data-val">{money(player.value)}</span>
-			{#if trend !== 0}<Trend value={trend} />{/if}
-			<span class="avg" title="media de puntos por jornada">{player.average.toFixed(1)}</span>
+			<!-- la flecha sola no dice cuánto: pegada a la media se leía como si el
+			     cambio fuese el valor de al lado. siempre con su delta -->
+			{#if trend !== 0}<Trend value={trend} showDelta />{/if}
+			<!-- en pretemporada la media es 0.0 para todos y solo añade ruido -->
+			{#if player.average > 0}
+				<span class="avg" title="media de puntos por jornada">{player.average.toFixed(1)}</span>
+			{/if}
 			{#if player.status}
 				<Chip c={STATUS_COLOR[player.status] ?? 'var(--warning)'} variant="tint">
 					{STATUS_LABEL[player.status] ?? player.status}
@@ -146,6 +157,12 @@
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
+	}
+	.head {
+		display: flex;
+		align-items: center;
+		gap: var(--sp-2);
+		min-width: 0;
 	}
 	.name {
 		font-weight: 600;

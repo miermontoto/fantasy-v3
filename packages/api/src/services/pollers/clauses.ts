@@ -1,5 +1,7 @@
 // poller de cláusulas: barre el listado completo de jugadores y guarda un snapshot
-// de cada jugador con dueño, además de los cambios respecto a la pasada anterior.
+// de CADA uno (con dueño o libre), además de los cambios respecto a la pasada
+// anterior. los agentes libres no generan eventos pero sí snapshot: son la otra
+// mitad del mercado y sin ellos el visor solo enseña plantillas ajenas.
 //
 // el filtro server-side `filters[owner]` devuelve vacío para cualquier valor no cero
 // (verificado en 26/27), así que hay que barrer todas las páginas y filtrar aquí.
@@ -50,9 +52,14 @@ export const clausesPoller: Poller = {
 		);
 
 		const owned = all.filter((p) => p.ownerId !== null);
+		// el diff de cláusulas solo mira a los que tienen dueño: un agente libre no
+		// tiene cláusula que subir ni dueño del que cambiar
 		const previous = new Map(latestOwnedSnapshots(communityId).map((row) => [row.playerId, row]));
 
-		const snapshots: PlayerSnapshotInsert[] = owned.map((p) => ({
+		// se guarda la liga ENTERA, no solo lo que tiene dueño: sin los agentes
+		// libres el visor no puede enseñar lo que se puede fichar del mercado, que
+		// es la otra mitad de las oportunidades
+		const snapshots: PlayerSnapshotInsert[] = all.map((p) => ({
 			playerId: p.id,
 			communityId,
 			ts: now,
@@ -151,7 +158,7 @@ export const clausesPoller: Poller = {
 		if (previous.size > 0) insertClauseChanges(changes);
 
 		console.log(
-			`[poller:clauses] ${all.length} jugadores, ${owned.length} con dueño, ${previous.size > 0 ? changes.length : 0} cambios`,
+			`[poller:clauses] ${all.length} jugadores (${owned.length} con dueño, ${all.length - owned.length} libres), ${previous.size > 0 ? changes.length : 0} cambios`,
 		);
 	},
 };

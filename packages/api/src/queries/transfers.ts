@@ -1,6 +1,6 @@
 // traspasos: la contabilidad de movimientos de dinero entre mánagers.
 
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { getDb } from '../db/connection.js';
 import { transfer } from '../db/schema.js';
 
@@ -24,11 +24,15 @@ export function insertTransfers(rows: TransferInsert[]): number {
 	return inserted;
 }
 
-export function listTransfers(communityId: string, limit = 200) {
+export function listTransfers(communityId: string, limit = 200, playerId?: string) {
+	const scope = playerId
+		? and(eq(transfer.communityId, communityId), eq(transfer.playerId, playerId))
+		: eq(transfer.communityId, communityId);
+
 	return getDb()
 		.select()
 		.from(transfer)
-		.where(eq(transfer.communityId, communityId))
+		.where(scope)
 		.orderBy(desc(transfer.seenAt))
 		.limit(limit)
 		.all();

@@ -1,10 +1,12 @@
 <script lang="ts">
-	// tabla de la liga: cash estimado y poder de puja, que es el ranking de amenaza
-	// real (quién puede pagar qué), no la clasificación por puntos.
+	// la liga vista como contabilidad: cash estimado y poder de puja, que es el
+	// ranking de amenaza real (quién puede pagar qué), no la clasificación por
+	// puntos. cada rival es una tarjeta con la misma anatomía que la de jugador.
 	import { api, type ManagerRow } from '$lib/api';
 	import { money, relativeTime } from '$lib/format';
-	import Chip from '$lib/components/Chip.svelte';
-	import Sparkline from '$lib/components/Sparkline.svelte';
+	import ManagerCard from '$lib/components/ManagerCard.svelte';
+
+	const HISTORY_DAYS = 14;
 
 	let managers = $state<ManagerRow[]>([]);
 	let history = $state<Record<string, number[]>>({});
@@ -17,11 +19,11 @@
 			.then(async (data) => {
 				managers = data.managers;
 				loading = false;
-				// las series se piden después: la tabla no debe esperar por los sparklines
+				// las series se piden después: la lista no debe esperar por los sparklines
 				const series = await Promise.all(
 					data.managers.map((m) =>
 						api
-							.managerHistory(m.managerId, 14)
+							.managerHistory(m.managerId, HISTORY_DAYS)
 							.then((h) => [m.managerId, h.history.map((p) => p.maxBid)] as const)
 							.catch(() => [m.managerId, []] as const),
 					),
@@ -35,7 +37,16 @@
 	});
 
 	const self = $derived(managers.find((m) => m.isSelf));
-	const rivalsAbove = $derived(self ? managers.filter((m) => !m.isSelf && m.maxBid > self.maxBid).length : 0);
+	const rivalsAbove = $derived(
+		self ? managers.filter((m) => !m.isSelf && m.maxBid > self.maxBid).length : 0,
+	);
+	// lo que hace falta para adelantar al rival inmediatamente superior
+	const gap = $derived.by(() => {
+		if (!self) return null;
+		const above = managers.filter((m) => !m.isSelf && m.maxBid > self.maxBid);
+		if (above.length === 0) return null;
+		return Math.min(...above.map((m) => m.maxBid)) - self.maxBid;
+	});
 </script>
 
 <h1>liga</h1>
@@ -61,9 +72,11 @@
 					<span class="stat-label">disponible ahora</span>
 				</div>
 			{/if}
-			<div class="stat-card">
+			<div class="stat-card" title={gap === null ? 'nadie puede pagar más que tú' : 'para adelantar al siguiente'}>
 				<span class="stat-value">{rivalsAbove}</span>
-				<span class="stat-label">rivales por encima</span>
+				<span class="stat-label">
+					{#if gap === null}rivales por encima{:else}rivales por encima · +{money(gap)}{/if}
+				</span>
 			</div>
 			<div class="stat-card">
 				<span class="stat-value quiet">{relativeTime(self.ts)}</span>
@@ -72,35 +85,13 @@
 		</section>
 	{/if}
 
-	<table class="data-table">
-		<thead>
-			<tr>
-				<th>mánager</th>
-				<th class="num">saldo</th>
-				<th class="num">plantilla</th>
-				<th class="num">techo de puja</th>
-				<th class="num">cláusulas</th>
-				<th>14 d</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each managers as m (m.managerId)}
-				<tr class:self={m.isSelf}>
-					<td class="manager">
-						{m.name}
-						{#if m.exact}
-							<Chip c="var(--accent)" variant="tint" title="calibrado con el saldo real">exacto</Chip>
-						{/if}
-					</td>
-					<td class="num" class:negative={m.cash < 0}>{money(m.cash)}</td>
-					<td class="num">{money(m.teamValue)}</td>
-					<td class="num strong">{money(m.maxBid)}</td>
-					<td class="num muted">{m.clauseSpend > 0 ? money(m.clauseSpend) : '—'}</td>
-					<td><Sparkline points={history[m.managerId] ?? []} /></td>
-				</tr>
-			{/each}
-		</tbody>
-	</table>
+	<div class="list">
+		{#each managers as m, i (m.managerId)}
+			<ManagerCard manager={m} rank={i + 1} history={history[m.managerId] ?? []} />
+		{:else}
+			<p class="empty">todavía no hay ningún mánager sincronizado</p>
+		{/each}
+	</div>
 
 	<p class="note">
 		el saldo de los rivales es estimado a partir del baseline del reset y de los traspasos
@@ -117,16 +108,7 @@
 		align-self: flex-start;
 		line-height: 1.8;
 	}
-	.stat-value.negative,
-	td.negative {
+	.stat-value.negative {
 		color: var(--danger);
-	}
-	.manager {
-		display: flex;
-		align-items: center;
-		gap: var(--sp-2);
-	}
-	tr.self td {
-		background: color-mix(in srgb, var(--accent) 8%, transparent);
 	}
 </style>
