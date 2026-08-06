@@ -1,0 +1,37 @@
+# sin esto, `COPY . .` arrastra los node_modules del host. los symlinks de pnpm
+# son relativos pero apuntan a paths del host (.pnpm/<hash>) que no existen en
+# la imagen, lo que rompe la resolución de binarios como tsup en el build stage.
+node_modules
+**/node_modules
+
+# artefactos de build / runtime que tampoco deben viajar al contexto
+.svelte-kit
+dist
+build
+packages/api/static
+packages/api/dist
+packages/web/build
+packages/web/.svelte-kit
+
+# datos locales (sqlite, wal, etc.). el volumen del contenedor monta esto aparte.
+data
+
+# git/vcs y caches
+.git
+.gitignore
+.cache
+
+# secretos y entornos locales (la imagen lee .env vía docker compose env_file
+# en runtime, no hace falta meterlos en build).
+.env
+.env.local
+.env.*.local
+
+# herramientas / metadatos del repo no necesarios para correr el servidor
+.claude
+.vscode
+.idea
+*.log
+contracts
+CLAUDE.md
+README.md

@@ -1,0 +1,18 @@
+node_modules
+dist
+build
+.svelte-kit
+packages/api/static
+
+# datos locales: contienen nombres reales de mánagers rivales
+data/
+*.db
+*.db-shm
+*.db-wal
+
+.env
+.env.local
+*.log
+
+.DS_Store
+.claude/settings.local.json

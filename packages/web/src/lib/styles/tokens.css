@@ -1,0 +1,23 @@
+/* tokens visuales de fantasy. extiende los de sis/duckhunt: mismo lenguaje,
+   acento propio (verde césped) y densidad alta para tablas de datos.
+   nunca escribir hex inline: siempre var(--token). */
+:root {
+	--fantasy-bg: #0a0c0e;
+	--fantasy-surface: #14181c;
+	--fantasy-border: #232a31;
+	--fantasy-text: #e6edf3;
+	--fantasy-muted: #8b98a5;
+
+	--fantasy-accent: #46d17f;
+	--fantasy-up: #46d17f;
+	--fantasy-down: #e5534b;
+	--fantasy-warn: #f0b040;
+
+	/* posiciones: mismo código de color que v1 (pt/df/mc/dl) */
+	--pos-gk: #e8c547;
+	--pos-def: #4bb3d4;
+	--pos-mid: #46d17f;
+	--pos-fwd: #e5534b;
+
+	--radius: 2px;
+}

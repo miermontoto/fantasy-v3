@@ -1,0 +1,26 @@
+// entrypoint de la api: carga env, inicializa la db (ejecuta migraciones),
+// arranca los pollers y levanta el servidor http con shutdown graceful.
+import { loadAppEnv, startApiServer } from '@platform/core-api';
+import app from './app.js';
+import { closeDb, getDb } from './db/connection.js';
+import { startAll, stopAll } from './services/poller-runner.js';
+import { VERSION } from './constants.js';
+
+// .env desde raíz de la app (dev en monorepo) o cwd (docker); .env.local sobrescribe
+loadAppEnv(import.meta.url);
+
+getDb();
+
+// DISABLE_POLLING=1 permite trabajar en local contra un snapshot de producción
+if (process.env.DISABLE_POLLING !== '1') {
+	startAll();
+}
+
+startApiServer(app, {
+	name: 'fantasy',
+	version: VERSION,
+	onShutdown: () => {
+		stopAll();
+	},
+	afterClose: closeDb,
+});

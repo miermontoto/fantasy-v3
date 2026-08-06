@@ -1,0 +1,14 @@
+services:
+  fantasy:
+    build: .
+    ports:
+      - "3006:3000"
+    volumes:
+      - fantasy-data:/app/data
+    env_file: .env
+    environment:
+      - DATABASE_PATH=/app/data/fantasy.db
+    restart: unless-stopped
+
+volumes:
+  fantasy-data:

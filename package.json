@@ -1,0 +1,20 @@
+{
+  "name": "fantasy",
+  "private": true,
+  "type": "module",
+  "description": "companion de fantasy marca: contabilidad de rivales, seguimiento de cl\u00e1usulas e inteligencia de mercado",
+  "author": "Juan Mier",
+  "scripts": {
+    "dev": "pnpm --filter @fantasy/api dev & pnpm --filter @fantasy/web dev & wait",
+    "build": "pnpm --filter @fantasy/web build && pnpm run copy-static && pnpm --filter @fantasy/api build",
+    "copy-static": "rm -rf packages/api/static && mkdir -p packages/api/static && cp -r packages/web/build/. packages/api/static/",
+    "start": "pnpm --filter @fantasy/api start",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "test": "pnpm --filter @fantasy/api exec tsx --test \"src/**/*.test.ts\"",
+    "version:bump": "pnpm --filter @fantasy/api exec tsx ../../platform/tooling/version/bump-version.ts src/constants.ts"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.9"
+  }
+}

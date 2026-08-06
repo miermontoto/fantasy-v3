@@ -1,0 +1,12 @@
+{
+  "name": "@fantasy/shared",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "@platform/config": "workspace:*",
+    "typescript": "^5.7.0"
+  }
+}
