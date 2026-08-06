@@ -1,25 +1,24 @@
 // cliente http de la api. tipos alineados con las rutas de packages/api/src/routes.
+// transporte compartido de la plataforma: OfflineError deja de disfrazarse de
+// sesión caducada y el 401 redirige a /login (salvo que ya estemos allí).
 
-const base = import.meta.env.VITE_API_BASE ?? '';
+import { createHttp } from '@platform/ui/http';
 
-/** un 401 significa sesión caducada: al login, no un error en pantalla */
-function redirectToLogin(): never {
-	if (typeof window !== 'undefined') window.location.href = '/login';
-	throw new Error('sesión no válida');
-}
+const LOGIN_PATH = '/login';
 
-async function get<T>(path: string): Promise<T> {
-	const res = await fetch(`${base}/api${path}`, { credentials: 'include' });
-	if (res.status === 401) redirectToLogin();
-	if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-	return (await res.json()) as T;
-}
+const http = createHttp({
+	base: `${import.meta.env.VITE_API_BASE ?? ''}/api`,
+	on401: () => {
+		if (typeof window !== 'undefined' && window.location.pathname !== LOGIN_PATH) {
+			window.location.href = LOGIN_PATH;
+		}
+	},
+});
 
-async function post<T>(path: string): Promise<T> {
-	const res = await fetch(`${base}/api${path}`, { method: 'POST', credentials: 'include' });
-	if (res.status === 401) redirectToLogin();
-	if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-	return (await res.json()) as T;
+export interface SessionUser {
+	id: number;
+	email: string;
+	name: string | null;
 }
 
 export interface ManagerRow {
@@ -67,6 +66,7 @@ export interface ClauseChange {
 
 export interface TransferRow {
 	id: number;
+	playerId: string;
 	playerName: string;
 	fromManagerId: string | null;
 	toManagerId: string | null;
@@ -75,11 +75,19 @@ export interface TransferRow {
 	seenAt: number;
 }
 
+export interface PlayerInfo {
+	id: string;
+	name: string;
+	position: number;
+	photoUrl: string | null;
+}
+
 export interface PlayerPoint {
 	ts: number;
 	value: number;
 	clause: number | null;
 	clauseMultiplier: number | null;
+	ownerId: string | null;
 	shield: number;
 }
 
@@ -116,27 +124,27 @@ export interface PollerRow {
 }
 
 export const api = {
-	ledger: () => get<{ communityId: string; managers: ManagerRow[] }>('/ledger'),
+	me: () => http.get<{ authenticated: boolean; user: SessionUser }>('/auth/me'),
+	logout: () => http.post<{ ok: boolean }>('/auth/logout'),
+	ledger: () => http.get<{ communityId: string; managers: ManagerRow[] }>('/ledger'),
 	managerHistory: (id: string, days = 30) =>
-		get<{ history: { ts: number; cash: number; teamValue: number; maxBid: number }[] }>(
+		http.get<{ history: { ts: number; cash: number; teamValue: number; maxBid: number }[] }>(
 			`/ledger/history/${id}?days=${days}`,
 		),
-	transfers: (limit = 60) => get<{ transfers: TransferRow[] }>(`/ledger/transfers?limit=${limit}`),
+	transfers: (limit = 60) => http.get<{ transfers: TransferRow[] }>(`/ledger/transfers?limit=${limit}`),
 	clauses: (params: { budget?: number; excludeOwn?: boolean; hideShielded?: boolean; limit?: number } = {}) => {
 		const q = new URLSearchParams();
 		if (params.budget !== undefined) q.set('budget', String(params.budget));
 		if (params.excludeOwn) q.set('excludeOwn', 'true');
 		if (params.hideShielded) q.set('hideShielded', 'true');
 		q.set('limit', String(params.limit ?? 60));
-		return get<{ targets: StealTarget[] }>(`/clauses?${q}`);
+		return http.get<{ targets: StealTarget[] }>(`/clauses?${q}`);
 	},
-	clauseChanges: (limit = 40) => get<{ changes: ClauseChange[] }>(`/clauses/changes?limit=${limit}`),
+	clauseChanges: (limit = 40) => http.get<{ changes: ClauseChange[] }>(`/clauses/changes?limit=${limit}`),
 	player: (id: string, days = 30) =>
-		get<{ player: { id: string; name: string; position: number }; history: PlayerPoint[] }>(
-			`/players/${id}?days=${days}`,
-		),
-	managers: () => get<{ managers: ManagerInfo[] }>('/managers'),
-	roster: (id: string) => get<{ players: RosterPlayer[] }>(`/managers/${id}/roster`),
-	pollers: () => get<{ pollers: PollerRow[] }>('/sync'),
-	runPoller: (name: string) => post<{ ok: boolean; error?: string }>(`/sync/${name}`),
+		http.get<{ player: PlayerInfo; history: PlayerPoint[] }>(`/players/${id}?days=${days}`),
+	managers: () => http.get<{ managers: ManagerInfo[] }>('/managers'),
+	roster: (id: string) => http.get<{ players: RosterPlayer[] }>(`/managers/${id}/roster`),
+	pollers: () => http.get<{ pollers: PollerRow[] }>('/sync'),
+	runPoller: (name: string) => http.post<{ ok: boolean; error?: string }>(`/sync/${name}`),
 };
