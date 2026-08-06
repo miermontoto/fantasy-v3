@@ -4,9 +4,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MAX_DEBT_VALUE_PCT } from '../constants.js';
 
-/** max_bid = max(cash, 0) + 25% del valor de plantilla */
+/** max_bid = max(0, cash + 25% del valor de plantilla) */
 function maxBid(cash: number, teamValue: number): number {
-	return Math.max(cash, 0) + Math.round(MAX_DEBT_VALUE_PCT * teamValue);
+	return Math.max(0, cash + Math.round(MAX_DEBT_VALUE_PCT * teamValue));
 }
 
 test('con saldo positivo suma la deuda permitida', () => {
@@ -14,8 +14,14 @@ test('con saldo positivo suma la deuda permitida', () => {
 	assert.equal(maxBid(108_200_000, 94_966_000), 131_941_500);
 });
 
-test('un saldo negativo no resta: el máximo nunca baja de 25% de la plantilla', () => {
-	assert.equal(maxBid(-66_790_000, 140_910_000), 35_227_500);
+test('la deuda resta del techo', () => {
+	// caso real: el saldo negativo se come toda la deuda permitida
+	assert.equal(maxBid(-51_070_000, 246_522_000), 10_560_500);
+});
+
+test('con deuda suficiente el techo es exactamente cero, nunca negativo', () => {
+	assert.equal(maxBid(-66_790_000, 140_910_000), 0);
+	assert.equal(maxBid(-46_610_000, 145_600_000), 0);
 });
 
 test('el poder de puja nunca es negativo', () => {

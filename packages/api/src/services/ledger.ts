@@ -3,7 +3,7 @@
 //
 // modelo (verificado en 26/27):
 //   cash = cash_inicial - comprado + vendido - gasto_en_cláusulas
-//   poder_de_puja = max(cash, 0) + 25% del valor de plantilla
+//   poder_de_puja = max(0, cash + 25% del valor de plantilla)
 //
 // el presupuesto inicial es UNIFORME: no hay bonus por referidos. el historial de
 // saldo lo parte en "Saldo inicial" + "Ajuste por reinicio", pero la suma es la

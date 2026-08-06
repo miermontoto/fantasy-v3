@@ -93,10 +93,11 @@ construye la url como `ajax/` + el `data-ajax` del botón):
 - ⚠️ el campo `shield` del **listado miente**; solo `clause.shield` del detalle vale.
 
 ### contabilidad
-- `max_bid = max(cash, 0) + 25% × valor_de_plantilla`. el 25% es la deuda permitida
-  y depende **solo** de la plantilla: un saldo negativo no resta, así que el poder
-  de puja **nunca es negativo**. la "deuda máxima" que muestra el mercado es la
-  capacidad **restante** (0 si está todo comprometido), no el techo.
+- `max_bid = max(0, cash + 25% × valor_de_plantilla)`. el 25% es la deuda
+  permitida; la deuda **sí** resta, pero el resultado se acota en 0 porque no
+  existe la capacidad de compra negativa. la "deuda máxima" que muestra el mercado
+  es la capacidad **restante**, que además descuenta las pujas comprometidas
+  (`remaining_now`): techo 10.56M − 1.33M comprometido = 9.23M observado.
 - el presupuesto inicial **sí es uniforme** (200M): **no hay bonus por referidos**.
   el historial lo parte en "Saldo inicial" + "Ajuste por reinicio", pero la suma es
   igual para todos. el error del baseline viene de capturarlo después del reset,

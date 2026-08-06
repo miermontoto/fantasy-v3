@@ -51,7 +51,7 @@
 				<span class="figure" class:down={self.cash < 0}>{money(self.cash)}</span>
 			</div>
 			<div>
-				<span class="label">tu poder de puja</span>
+				<span class="label">tu techo de puja</span>
 				<span class="figure">{money(self.maxBid)}</span>
 			</div>
 			{#if self.remainingNow !== null}
@@ -79,7 +79,7 @@
 				<th>mánager</th>
 				<th class="num">saldo</th>
 				<th class="num">plantilla</th>
-				<th class="num">poder de puja</th>
+				<th class="num">techo de puja</th>
 				<th class="num">cláusulas</th>
 				<th>14 d</th>
 			</tr>
@@ -103,9 +103,9 @@
 
 	<p class="note">
 		el saldo de los rivales es estimado a partir del baseline del reset y de los traspasos
-		observados. la fila propia sale del saldo real. el poder de puja es el techo teórico
-		—nunca baja del 25% del valor de plantilla, porque la deuda permitida no depende del
-		saldo—; «disponible ahora» descuenta la deuda y las pujas ya comprometidas.
+		observados. la fila propia sale del saldo real. el techo de puja es el saldo más la deuda
+		permitida (25% de la plantilla), acotado en cero: con deuda suficiente no se puede comprar.
+		«disponible ahora» descuenta además las pujas ya comprometidas.
 	</p>
 {/if}
 
