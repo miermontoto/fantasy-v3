@@ -152,7 +152,7 @@ tools: `fantasy_ledger`, `fantasy_steal_targets`, `fantasy_clause_changes`,
 - ✅ fase 0: scaffolding (submódulo, workspace, docker, schema, poller-runner, health)
 - ✅ fase 1: scraper portado, pollers feed/clauses/standings, backfill de v2
 - ✅ fase 2: api de inteligencia + mcp (7 tools, stdio + http en /mcp)
-- ⏳ fase 3: dashboard de inteligencia (ledger, objetivos de robo, gráficos)
+- ✅ fase 3: dashboard de inteligencia (liga, cláusulas, actividad, ficha con gráfico)
 - ⏳ fase 4: paridad con v1 (tarjeta de jugador, filtros, visor de rivales)
 - ⏳ fase 5: acciones de escritura en ui, push, capacitor
 
