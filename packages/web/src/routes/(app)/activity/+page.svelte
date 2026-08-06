@@ -3,6 +3,7 @@
 	// también el estado de los pollers, que es lo que garantiza que no falte nada.
 	import { api, type TransferRow, type ClauseChange, type PollerRow } from '$lib/api';
 	import { money, relativeTime } from '$lib/format';
+	import Chip from '$lib/components/Chip.svelte';
 
 	let transfers = $state<TransferRow[]>([]);
 	let changes = $state<ClauseChange[]>([]);
@@ -43,6 +44,12 @@
 		acquired: 'fichado',
 		released: 'liberado',
 	};
+	// color por tipo de evento: subidas avisan, oportunidades destacan
+	const KIND_COLOR: Record<string, string> = {
+		clause_up: 'var(--warning)',
+		shield_off: 'var(--accent)',
+		owner_change: 'var(--accent)',
+	};
 </script>
 
 <h1>actividad</h1>
@@ -62,74 +69,54 @@
 </section>
 
 <div class="columns">
-	<section>
-		<h2>traspasos</h2>
+	<section class="card">
+		<h2 class="section-title">traspasos</h2>
 		<ul class="feed">
 			{#each transfers as t (t.id)}
 				<li>
-					<span class="player">{t.playerName}</span>
+					<span class="player"><a href="/players/{t.playerId}">{t.playerName}</a></span>
+					{#if t.kind === 'clause'}<Chip c="var(--warning)" variant="tint">clausulazo</Chip>{/if}
 					<span class="price" class:clause={t.kind === 'clause'}>{money(t.price)}</span>
 					<span class="when">{relativeTime(t.seenAt)}</span>
 				</li>
 			{:else}
-				<li class="muted">sin traspasos registrados</li>
+				<li class="empty">sin traspasos registrados</li>
 			{/each}
 		</ul>
 	</section>
 
-	<section>
-		<h2>cláusulas</h2>
+	<section class="card">
+		<h2 class="section-title">cláusulas</h2>
 		<ul class="feed">
 			{#each changes as c (c.playerId + c.ts + c.kind)}
 				<li>
 					<span class="player"><a href="/players/{c.playerId}">{c.name}</a></span>
-					<span class="kind kind-{c.kind}">{KIND_LABEL[c.kind] ?? c.kind}</span>
+					<Chip c={KIND_COLOR[c.kind] ?? null} variant="tint">{KIND_LABEL[c.kind] ?? c.kind}</Chip>
 					{#if c.newClause}<span class="price">{money(c.newClause)}</span>{/if}
 					<span class="when">{relativeTime(c.ts)}</span>
 				</li>
 			{:else}
-				<li class="muted">sin cambios registrados</li>
+				<li class="empty">sin cambios registrados</li>
 			{/each}
 		</ul>
 	</section>
 </div>
 
 <style>
-	h1 {
-		font-size: 1.1rem;
-		font-weight: 600;
-		margin: 0 0 1rem;
-	}
-	h2 {
-		font-size: 0.7rem;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		color: var(--text-muted);
-		font-weight: 500;
-		margin: 0 0 0.5rem;
-	}
 	.pollers {
 		display: flex;
-		gap: 0.5rem;
+		gap: var(--sp-2);
 		flex-wrap: wrap;
-		margin-bottom: 1.5rem;
+		margin-bottom: var(--sp-5);
 	}
 	.pollers button {
 		display: flex;
 		flex-direction: column;
 		align-items: flex-start;
 		gap: 0.1rem;
-		padding: 0.4rem 0.7rem;
+		padding: var(--sp-1) var(--sp-3);
 		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		color: var(--text);
-		cursor: pointer;
-		font: inherit;
 		font-size: 0.75rem;
-	}
-	.pollers button:hover:not(:disabled) {
-		border-color: var(--accent);
 	}
 	.pollers button.failing {
 		border-color: var(--danger);
@@ -148,20 +135,22 @@
 	.columns {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-		gap: 1.5rem;
+		gap: var(--sp-4);
+		align-items: start;
 	}
 	.feed {
 		list-style: none;
-		margin: 0;
-		padding: 0;
 		font-size: 0.8rem;
 	}
 	.feed li {
 		display: flex;
 		align-items: baseline;
-		gap: 0.5rem;
+		gap: var(--sp-2);
 		padding: 0.35rem 0;
 		border-bottom: 1px solid var(--border);
+	}
+	.feed li:last-child {
+		border-bottom: none;
 	}
 	.player {
 		flex: 1;
@@ -170,34 +159,10 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-	.player a {
-		color: var(--text);
-		text-decoration: none;
-	}
-	.player a:hover {
-		color: var(--accent);
-	}
 	.price {
 		font-variant-numeric: tabular-nums;
 	}
 	.price.clause {
 		color: var(--warning);
-	}
-	.kind {
-		font-size: 0.7rem;
-		color: var(--text-muted);
-	}
-	.kind-clause_up {
-		color: var(--warning);
-	}
-	.kind-shield_off,
-	.kind-owner_change {
-		color: var(--accent);
-	}
-	.muted {
-		color: var(--text-muted);
-	}
-	.error {
-		color: var(--danger);
 	}
 </style>

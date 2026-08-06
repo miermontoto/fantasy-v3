@@ -3,6 +3,7 @@
 	// real (quién puede pagar qué), no la clasificación por puntos.
 	import { api, type ManagerRow } from '$lib/api';
 	import { money, relativeTime } from '$lib/format';
+	import Chip from '$lib/components/Chip.svelte';
 	import Sparkline from '$lib/components/Sparkline.svelte';
 
 	let managers = $state<ManagerRow[]>([]);
@@ -45,35 +46,33 @@
 	<p class="error">no se pudo cargar: {error}</p>
 {:else}
 	{#if self}
-		<section class="summary">
-			<div>
-				<span class="label">tu saldo</span>
-				<span class="figure" class:down={self.cash < 0}>{money(self.cash)}</span>
+		<section class="stats-grid">
+			<div class="stat-card">
+				<span class="stat-value" class:negative={self.cash < 0}>{money(self.cash)}</span>
+				<span class="stat-label">tu saldo</span>
 			</div>
-			<div>
-				<span class="label">tu techo de puja</span>
-				<span class="figure">{money(self.maxBid)}</span>
+			<div class="stat-card">
+				<span class="stat-value">{money(self.maxBid)}</span>
+				<span class="stat-label">tu techo de puja</span>
 			</div>
 			{#if self.remainingNow !== null}
-				<div>
-					<span class="label">disponible ahora</span>
-					<span class="figure" title="descuenta la deuda y las pujas comprometidas"
-						>{money(self.remainingNow)}</span
-					>
+				<div class="stat-card" title="descuenta la deuda y las pujas comprometidas">
+					<span class="stat-value">{money(self.remainingNow)}</span>
+					<span class="stat-label">disponible ahora</span>
 				</div>
 			{/if}
-			<div>
-				<span class="label">rivales por encima</span>
-				<span class="figure">{rivalsAbove}</span>
+			<div class="stat-card">
+				<span class="stat-value">{rivalsAbove}</span>
+				<span class="stat-label">rivales por encima</span>
 			</div>
-			<div>
-				<span class="label">actualizado</span>
-				<span class="figure small">{relativeTime(self.ts)}</span>
+			<div class="stat-card">
+				<span class="stat-value quiet">{relativeTime(self.ts)}</span>
+				<span class="stat-label">actualizado</span>
 			</div>
 		</section>
 	{/if}
 
-	<table>
+	<table class="data-table">
 		<thead>
 			<tr>
 				<th>mánager</th>
@@ -87,11 +86,13 @@
 		<tbody>
 			{#each managers as m (m.managerId)}
 				<tr class:self={m.isSelf}>
-					<td>
+					<td class="manager">
 						{m.name}
-						{#if m.exact}<span class="tag" title="calibrado con el saldo real">exacto</span>{/if}
+						{#if m.exact}
+							<Chip c="var(--accent)" variant="tint" title="calibrado con el saldo real">exacto</Chip>
+						{/if}
 					</td>
-					<td class="num" class:down={m.cash < 0}>{money(m.cash)}</td>
+					<td class="num" class:negative={m.cash < 0}>{money(m.cash)}</td>
 					<td class="num">{money(m.teamValue)}</td>
 					<td class="num strong">{money(m.maxBid)}</td>
 					<td class="num muted">{m.clauseSpend > 0 ? money(m.clauseSpend) : '—'}</td>
@@ -110,89 +111,22 @@
 {/if}
 
 <style>
-	h1 {
-		font-size: 1.1rem;
-		font-weight: 600;
-		margin: 0 0 1rem;
+	.stat-value.quiet {
+		font-size: 0.85rem;
+		color: var(--text-muted);
+		align-self: flex-start;
+		line-height: 1.8;
 	}
-	.summary {
+	.stat-value.negative,
+	td.negative {
+		color: var(--danger);
+	}
+	.manager {
 		display: flex;
-		flex-wrap: wrap;
-		gap: 2rem;
-		padding: 0.75rem 1rem;
-		border: 1px solid var(--border);
-		background: var(--bg-card);
-		margin-bottom: 1rem;
-	}
-	.summary div {
-		display: flex;
-		flex-direction: column;
-		gap: 0.15rem;
-	}
-	.label {
-		font-size: 0.7rem;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		color: var(--text-muted);
-	}
-	.figure {
-		font-size: 1.25rem;
-		font-variant-numeric: tabular-nums;
-	}
-	.figure.small {
-		font-size: 0.9rem;
-		color: var(--text-muted);
-	}
-	table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 0.875rem;
-	}
-	th {
-		text-align: left;
-		font-weight: 500;
-		font-size: 0.7rem;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		color: var(--text-muted);
-		padding: 0.4rem 0.5rem;
-		border-bottom: 1px solid var(--border);
-	}
-	td {
-		padding: 0.45rem 0.5rem;
-		border-bottom: 1px solid var(--border);
-		font-variant-numeric: tabular-nums;
-	}
-	.num {
-		text-align: right;
-	}
-	.strong {
-		font-weight: 600;
+		align-items: center;
+		gap: var(--sp-2);
 	}
 	tr.self td {
 		background: color-mix(in srgb, var(--accent) 8%, transparent);
-	}
-	.down {
-		color: var(--danger);
-	}
-	.muted {
-		color: var(--text-muted);
-	}
-	.tag {
-		font-size: 0.65rem;
-		color: var(--accent);
-		border: 1px solid var(--accent);
-		padding: 0 0.25rem;
-		margin-left: 0.35rem;
-		border-radius: var(--radius);
-	}
-	.note {
-		margin-top: 1rem;
-		font-size: 0.75rem;
-		color: var(--text-muted);
-		max-width: 60ch;
-	}
-	.error {
-		color: var(--danger);
 	}
 </style>

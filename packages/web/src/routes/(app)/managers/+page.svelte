@@ -1,6 +1,7 @@
 <script lang="ts">
 	// índice de plantillas: entrada al visor. la propia primero.
 	import { api, type ManagerInfo } from '$lib/api';
+	import Chip from '$lib/components/Chip.svelte';
 
 	let managers = $state<ManagerInfo[]>([]);
 	let error = $state<string | null>(null);
@@ -17,45 +18,38 @@
 
 {#if error}<p class="error">{error}</p>{/if}
 
-<ul>
+<ul class="list">
 	{#each managers as m (m.id)}
-		<li><a href="/managers/{m.id}">{m.name}</a>{#if m.isSelf}<span class="tag">tú</span>{/if}</li>
+		<li>
+			<a href="/managers/{m.id}">{m.name}</a>
+			{#if m.isSelf}<Chip c="var(--accent)" variant="tint">tú</Chip>{/if}
+		</li>
 	{/each}
 </ul>
 
 <style>
-	h1 {
-		font-size: 1.1rem;
-		font-weight: 600;
-		margin: 0 0 1rem;
-	}
-	ul {
+	.list {
 		list-style: none;
-		margin: 0;
-		padding: 0;
+		max-width: 32rem;
 	}
-	li {
-		padding: 0.4rem 0;
-		border-bottom: 1px solid var(--border);
+	.list li {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
-	}
-	a {
-		color: var(--text);
-		text-decoration: none;
-	}
-	a:hover {
-		color: var(--accent);
-	}
-	.tag {
-		font-size: 0.65rem;
-		color: var(--accent);
-		border: 1px solid var(--accent);
-		padding: 0 0.25rem;
+		gap: var(--sp-2);
+		padding: var(--sp-2) var(--sp-3);
+		background: var(--bg-card);
+		border: 1px solid var(--border);
 		border-radius: var(--radius);
+		margin-bottom: 2px;
+		transition: border-color 0.05s;
 	}
-	.error {
-		color: var(--danger);
+	.list li:hover {
+		border-color: var(--accent);
+	}
+	.list a {
+		flex: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 </style>
