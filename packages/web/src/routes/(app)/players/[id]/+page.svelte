@@ -1,8 +1,11 @@
 <script lang="ts">
 	// ficha con la evolución de valor y cláusula: es lo que ninguna versión anterior
 	// pudo mostrar, porque hasta v3 no se guardaba histórico.
-	import { api, type PlayerPoint } from '$lib/api';
-	import { money, position } from '$lib/format';
+	import { api, type PlayerInfo, type PlayerPoint } from '$lib/api';
+	import { money } from '$lib/format';
+	import Chip from '$lib/components/Chip.svelte';
+	import PositionTag from '$lib/components/PositionTag.svelte';
+	import Trend from '$lib/components/Trend.svelte';
 	import { page } from '$app/state';
 	import * as echarts from 'echarts/core';
 	import { LineChart } from 'echarts/charts';
@@ -11,10 +14,12 @@
 
 	echarts.use([LineChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
 
-	let info = $state<{ id: string; name: string; position: number } | null>(null);
+	let info = $state<PlayerInfo | null>(null);
 	let history = $state<PlayerPoint[]>([]);
+	let ownerName = $state<string | null>(null);
 	let error = $state<string | null>(null);
 	let chartEl = $state<HTMLDivElement | null>(null);
+	let photoBroken = $state(false);
 
 	$effect(() => {
 		const id = page.params.id;
@@ -24,6 +29,12 @@
 			.then((data) => {
 				info = data.player;
 				history = data.history;
+				// el dueño sale del ledger: el snapshot solo trae su id
+				const ownerId = data.history.at(-1)?.ownerId ?? null;
+				if (!ownerId) return;
+				return api.ledger().then((l) => {
+					ownerName = l.managers.find((m) => m.managerId === ownerId)?.name ?? null;
+				});
 			})
 			.catch((err: Error) => (error = err.message));
 	});
@@ -53,7 +64,7 @@
 				splitLine: { lineStyle: { color: style.getPropertyValue('--border').trim() } },
 			},
 			series: [
-				{ name: 'valor', type: 'line', smooth: true, showSymbol: false, data: history.map((p) => p.value), lineStyle: { color: accent } , itemStyle: { color: accent } },
+				{ name: 'valor', type: 'line', smooth: true, showSymbol: false, data: history.map((p) => p.value), lineStyle: { color: accent }, itemStyle: { color: accent } },
 				{ name: 'cláusula', type: 'line', smooth: true, showSymbol: false, data: history.map((p) => p.clause), lineStyle: { color: warn }, itemStyle: { color: warn } },
 			],
 		});
@@ -74,33 +85,49 @@
 {#if error}
 	<p class="error">no se pudo cargar: {error}</p>
 {:else if info}
-	<h1>
-		{info.name}
-		<span class="pos pos-{info.position}">{position(info.position)}</span>
-	</h1>
+	<header class="player-head">
+		{#if info.photoUrl && !photoBroken}
+			<img class="photo" src={info.photoUrl} alt="" onerror={() => (photoBroken = true)} />
+		{:else}
+			<div class="photo placeholder">?</div>
+		{/if}
+		<div class="who">
+			<h1>{info.name}</h1>
+			<div class="meta">
+				<PositionTag position={info.position} />
+				{#if ownerName}<Chip variant="glass" title="dueño actual">{ownerName}</Chip>{/if}
+				{#if latest && latest.shield !== 0}
+					<Chip c="var(--warning)" variant="tint">blindado ⛨</Chip>
+				{/if}
+			</div>
+		</div>
+	</header>
 
 	{#if latest}
-		<section class="summary">
-			<div><span class="label">valor</span><span class="figure">{money(latest.value)}</span></div>
-			<div>
-				<span class="label">cláusula</span>
-				<span class="figure">{latest.clause ? money(latest.clause) : '—'}</span>
+		<section class="stats-grid">
+			<div class="stat-card">
+				<span class="stat-value">{money(latest.value)}</span>
+				<span class="stat-label">valor</span>
 			</div>
-			<div>
-				<span class="label">multiplicador</span>
-				<span class="figure">{latest.clauseMultiplier ? `${latest.clauseMultiplier.toFixed(2)}×` : '—'}</span>
+			<div class="stat-card">
+				<span class="stat-value">{latest.clause ? money(latest.clause) : '—'}</span>
+				<span class="stat-label">cláusula</span>
 			</div>
-			<div>
-				<span class="label">cambio en el periodo</span>
-				<span class="figure" class:up={valueChange > 0} class:down={valueChange < 0}>
-					{valueChange >= 0 ? '+' : ''}{money(valueChange)}
+			<div class="stat-card">
+				<span class="stat-value">
+					{latest.clauseMultiplier ? `${latest.clauseMultiplier.toFixed(2)}×` : '—'}
 				</span>
+				<span class="stat-label">multiplicador</span>
+			</div>
+			<div class="stat-card">
+				<span class="stat-value plain"><Trend value={valueChange} showDelta /></span>
+				<span class="stat-label">cambio en el periodo</span>
 			</div>
 		</section>
 	{/if}
 
 	{#if history.length > 1}
-		<div class="chart" bind:this={chartEl}></div>
+		<div class="chart card" bind:this={chartEl}></div>
 	{:else}
 		<p class="muted">
 			todavía no hay histórico suficiente: la serie empieza a construirse con cada pasada del
@@ -112,68 +139,49 @@
 {/if}
 
 <style>
-	h1 {
-		font-size: 1.1rem;
-		font-weight: 600;
-		margin: 0 0 1rem;
+	.player-head {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
+		gap: var(--sp-3);
+		margin-bottom: var(--sp-4);
 	}
-	.summary {
+	.player-head h1 {
+		margin-bottom: 0;
+		color: var(--text);
+	}
+	.photo {
+		width: 48px;
+		height: 56px;
+		object-fit: cover;
+		border-radius: var(--radius);
+		background: var(--bg-hover);
+		flex-shrink: 0;
+	}
+	.placeholder {
 		display: flex;
-		flex-wrap: wrap;
-		gap: 2rem;
-		padding: 0.75rem 1rem;
-		border: 1px solid var(--border);
-		background: var(--bg-card);
-		margin-bottom: 1rem;
+		align-items: center;
+		justify-content: center;
+		color: var(--text-faint);
 	}
-	.summary div {
+	.who {
 		display: flex;
 		flex-direction: column;
-		gap: 0.15rem;
+		gap: var(--sp-1);
 	}
-	.label {
-		font-size: 0.7rem;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		color: var(--text-muted);
+	.meta {
+		display: flex;
+		align-items: center;
+		gap: var(--sp-2);
 	}
-	.figure {
-		font-size: 1.25rem;
-		font-variant-numeric: tabular-nums;
+	.stat-value.plain {
+		color: var(--text);
+	}
+	.stat-value.plain :global(.trend) {
+		font-size: inherit;
 	}
 	.chart {
 		width: 100%;
 		height: 320px;
-	}
-	.up {
-		color: var(--success);
-	}
-	.down {
-		color: var(--danger);
-	}
-	.muted {
-		color: var(--text-muted);
-	}
-	.error {
-		color: var(--danger);
-	}
-	.pos {
-		font-size: 0.75rem;
-		font-weight: 600;
-	}
-	.pos-1 {
-		color: var(--pos-gk);
-	}
-	.pos-2 {
-		color: var(--pos-def);
-	}
-	.pos-3 {
-		color: var(--pos-mid);
-	}
-	.pos-4 {
-		color: var(--pos-fwd);
+		padding: var(--sp-2);
 	}
 </style>
