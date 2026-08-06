@@ -3,12 +3,13 @@
 //
 // modelo (verificado en 26/27):
 //   cash = cash_inicial - comprado + vendido - gasto_en_cláusulas
-//   poder_de_puja = cash + 25% del valor de plantilla
+//   poder_de_puja = max(cash, 0) + 25% del valor de plantilla
 //
-// el cash inicial NO es 200M uniforme: el historial de saldo muestra "Saldo inicial"
-// y "Ajuste por reinicio" individualizados (bonus por referidos), así que los
-// baselines de los rivales arrastran unos millones de incertidumbre irreducible.
-// la fila propia se calibra con /ajax/balance y sí es exacta.
+// el presupuesto inicial es UNIFORME: no hay bonus por referidos. el historial de
+// saldo lo parte en "Saldo inicial" + "Ajuste por reinicio", pero la suma es la
+// misma para todos. el error del baseline viene solo de capturarlo después del
+// reset, cuando los valores de plantilla ya se han movido.
+// la fila propia se calibra con /ajax/balance y es exacta.
 
 import { CLAUSE } from '../constants.js';
 import { accountableTransfers } from '../queries/transfers.js';

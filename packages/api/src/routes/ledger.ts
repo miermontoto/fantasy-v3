@@ -20,6 +20,7 @@ ledger.get('/', async (c) => {
 			maxBid: snapshot.maxBid,
 			clauseSpend: snapshot.clauseSpend,
 			pendingBids: snapshot.pendingBids,
+			remainingNow: snapshot.remainingNow,
 			exact: snapshot.exact,
 			points: snapshot.points,
 			position: snapshot.position,

@@ -29,7 +29,9 @@ export const CLAUSE = {
 	FLOOR: 1_000_000,
 } as const;
 
-// poder de puja = cash + este porcentaje del valor de plantilla (la deuda permitida)
+// deuda permitida = este porcentaje del valor de plantilla.
+// poder de puja = max(cash, 0) + deuda permitida: un saldo negativo no resta,
+// porque el margen de deuda depende solo de la plantilla. nunca es negativo.
 export const MAX_DEBT_VALUE_PCT = 0.25;
 
 // intervalos de los pollers

@@ -14,7 +14,7 @@ export const community = sqliteTable('community', {
 	id: text('id').primaryKey(), // id de fantasy marca
 	name: text('name').notNull(),
 	competitionId: integer('competition_id'),
-	/** presupuesto inicial de la liga; no siempre son 200M (hay bonus por referidos) */
+	/** presupuesto inicial de la liga: uniforme para todos los mánagers */
 	startBudget: integer('start_budget').notNull().default(200_000_000),
 	/** fecha del último reset: el baseline del ledger solo es válido justo después */
 	resetAt: integer('reset_at'),
@@ -81,6 +81,12 @@ export const managerSnapshot = sqliteTable(
 		clauseSpend: integer('clause_spend').notNull().default(0),
 		/** pujas comprometidas; solo se conoce para el mánager propio */
 		pendingBids: integer('pending_bids').notNull().default(0),
+		/**
+		 * capacidad realmente disponible ahora mismo, descontando deuda y pujas
+		 * comprometidas. solo la publica el juego para el mánager propio; null en
+		 * los rivales. no confundir con maxBid, que es el techo teórico.
+		 */
+		remainingNow: integer('remaining_now'),
 		/** true si la fila viene del saldo real y no de la estimación */
 		exact: integer('exact', { mode: 'boolean' }).notNull().default(false),
 		points: integer('points'),

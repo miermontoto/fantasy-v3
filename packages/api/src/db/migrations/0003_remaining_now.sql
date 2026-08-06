@@ -1,0 +1,1 @@
+ALTER TABLE `manager_snapshot` ADD `remaining_now` integer;

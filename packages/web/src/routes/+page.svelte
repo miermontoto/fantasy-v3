@@ -54,6 +54,14 @@
 				<span class="label">tu poder de puja</span>
 				<span class="figure">{money(self.maxBid)}</span>
 			</div>
+			{#if self.remainingNow !== null}
+				<div>
+					<span class="label">disponible ahora</span>
+					<span class="figure" title="descuenta la deuda y las pujas comprometidas"
+						>{money(self.remainingNow)}</span
+					>
+				</div>
+			{/if}
 			<div>
 				<span class="label">rivales por encima</span>
 				<span class="figure">{rivalsAbove}</span>
@@ -85,7 +93,7 @@
 					</td>
 					<td class="num" class:down={m.cash < 0}>{money(m.cash)}</td>
 					<td class="num">{money(m.teamValue)}</td>
-					<td class="num strong" class:down={m.maxBid < 0}>{money(m.maxBid)}</td>
+					<td class="num strong">{money(m.maxBid)}</td>
 					<td class="num muted">{m.clauseSpend > 0 ? money(m.clauseSpend) : '—'}</td>
 					<td><Sparkline points={history[m.managerId] ?? []} /></td>
 				</tr>
@@ -94,8 +102,10 @@
 	</table>
 
 	<p class="note">
-		el saldo de los rivales es estimado: el presupuesto inicial no es uniforme (hay bonus por
-		referidos), así que arrastra unos millones de incertidumbre. la fila propia sale del saldo real.
+		el saldo de los rivales es estimado a partir del baseline del reset y de los traspasos
+		observados. la fila propia sale del saldo real. el poder de puja es el techo teórico
+		—nunca baja del 25% del valor de plantilla, porque la deuda permitida no depende del
+		saldo—; «disponible ahora» descuenta la deuda y las pujas ya comprometidas.
 	</p>
 {/if}
 

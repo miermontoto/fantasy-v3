@@ -31,6 +31,8 @@ export interface ManagerRow {
 	maxBid: number;
 	clauseSpend: number;
 	pendingBids: number;
+	/** capacidad disponible ahora (solo la publica el juego para uno mismo) */
+	remainingNow: number | null;
 	exact: boolean;
 	points: number | null;
 	position: number | null;

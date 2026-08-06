@@ -38,8 +38,13 @@ export const standingsPoller: Poller = {
 			const estimate = estimateCash(communityId, managerId);
 			const cash = isSelf && quick ? quick.current : estimate.cash;
 			const pendingBids = isSelf && quick ? quick.current - quick.future : 0;
-			const maxBid =
-				isSelf && quick ? quick.remainingDebt : cash + Math.round(MAX_DEBT_VALUE_PCT * entry.teamValue);
+			// el cash negativo NO resta poder de puja: la deuda permitida depende solo
+			// del valor de plantilla, así que el máximo nunca baja de 25% × plantilla.
+			// se aplica igual a todos para que la columna sea comparable; la capacidad
+			// REALMENTE disponible del mánager propio (que descuenta deuda y pujas
+			// comprometidas) se guarda aparte en remainingNow.
+			const maxBid = Math.max(cash, 0) + Math.round(MAX_DEBT_VALUE_PCT * entry.teamValue);
+			const remainingNow = isSelf && quick ? quick.remainingDebt : null;
 
 			insertManagerSnapshot({
 				managerId,
@@ -49,6 +54,7 @@ export const standingsPoller: Poller = {
 				maxBid,
 				clauseSpend: estimate.clauseSpend,
 				pendingBids,
+				remainingNow,
 				exact: isSelf && quick !== null,
 				points: entry.points,
 				position: entry.position,

@@ -93,10 +93,14 @@ construye la url como `ajax/` + el `data-ajax` del botón):
 - ⚠️ el campo `shield` del **listado miente**; solo `clause.shield` del detalle vale.
 
 ### contabilidad
-- `max_bid = cash + 25% × valor_de_plantilla`. la "deuda máxima" que muestra el
-  mercado es la capacidad **restante** (0 si está todo comprometido), no el techo.
-- el presupuesto inicial **no es 200M uniforme**: el historial de saldo muestra
-  "Saldo inicial" + "Ajuste por reinicio" individualizados (bonus por referidos).
+- `max_bid = max(cash, 0) + 25% × valor_de_plantilla`. el 25% es la deuda permitida
+  y depende **solo** de la plantilla: un saldo negativo no resta, así que el poder
+  de puja **nunca es negativo**. la "deuda máxima" que muestra el mercado es la
+  capacidad **restante** (0 si está todo comprometido), no el techo.
+- el presupuesto inicial **sí es uniforme** (200M): **no hay bonus por referidos**.
+  el historial lo parte en "Saldo inicial" + "Ajuste por reinicio", pero la suma es
+  igual para todos. el error del baseline viene de capturarlo después del reset,
+  con los valores de plantilla ya movidos.
 - los eventos del feed **hacen scroll y desaparecen**: en v2 se perdieron dos
   traspasos sincronizando 1×/día. de ahí que el poller del feed sea el crítico
   (15 min) y que exista reconciliación por `transfer.price` del detalle.
