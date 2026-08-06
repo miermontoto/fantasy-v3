@@ -5,6 +5,7 @@
 // cash rival quedan como series temporales consultables, no como "el estado de hoy".
 
 import { sqliteTable, text, integer, real, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { defineSessionTable } from '@platform/auth';
 
 // ===== comunidad y sesión =====
 
@@ -229,3 +230,20 @@ export const pollerState = sqliteTable('poller_state', {
 	failures: integer('failures').notNull().default(0),
 	lastError: text('last_error'),
 });
+
+// ===== autenticación =====
+
+/**
+ * cuentas con acceso al dashboard. la app es de uso personal: el alta se controla
+ * con ALLOWED_EMAILS, no hay registro abierto.
+ */
+export const appUser = sqliteTable('app_user', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	email: text('email').notNull().unique(),
+	name: text('name'),
+	createdAt: integer('created_at').notNull(),
+	lastSeenAt: integer('last_seen_at'),
+});
+
+/** tabla de sesiones canónica de la plataforma */
+export const authSession = defineSessionTable(() => appUser.id);

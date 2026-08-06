@@ -8,6 +8,13 @@
       "when": 1786012916583,
       "tag": "0000_initial_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1786017615911,
+      "tag": "0001_auth_tables",
+      "breakpoints": true
     }
   ]
 }

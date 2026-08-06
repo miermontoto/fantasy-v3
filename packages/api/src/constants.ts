@@ -51,3 +51,10 @@ export const POSITION = {
 } as const;
 
 export type Position = (typeof POSITION)[keyof typeof POSITION];
+
+// sesión del dashboard
+export const SESSION_COOKIE_NAME = 'fantasy_session';
+export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+/** cabecera del token estático que protege el transport http del mcp */
+export const MCP_TOKEN_HEADER = 'x-fantasy-token';

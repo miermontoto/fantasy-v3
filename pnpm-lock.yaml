@@ -23,12 +23,18 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.0.0
         version: 1.30.0(zod@3.25.76)
+      '@platform/auth':
+        specifier: workspace:*
+        version: link:../../platform/packages/auth
       '@platform/core-api':
         specifier: workspace:*
         version: link:../../platform/packages/core-api
       '@platform/db':
         specifier: workspace:*
         version: link:../../platform/packages/db
+      '@platform/oidc-rp':
+        specifier: workspace:*
+        version: link:../../platform/packages/oidc-rp
       better-sqlite3:
         specifier: ^11.8.0
         version: 11.10.0

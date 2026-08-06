@@ -2,14 +2,22 @@
 
 const base = import.meta.env.VITE_API_BASE ?? '';
 
+/** un 401 significa sesión caducada: al login, no un error en pantalla */
+function redirectToLogin(): never {
+	if (typeof window !== 'undefined') window.location.href = '/login';
+	throw new Error('sesión no válida');
+}
+
 async function get<T>(path: string): Promise<T> {
 	const res = await fetch(`${base}/api${path}`, { credentials: 'include' });
+	if (res.status === 401) redirectToLogin();
 	if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
 	return (await res.json()) as T;
 }
 
 async function post<T>(path: string): Promise<T> {
 	const res = await fetch(`${base}/api${path}`, { method: 'POST', credentials: 'include' });
+	if (res.status === 401) redirectToLogin();
 	if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
 	return (await res.json()) as T;
 }
