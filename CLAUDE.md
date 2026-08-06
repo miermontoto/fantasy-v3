@@ -135,11 +135,23 @@ los apaga para trabajar en local contra un snapshot.
 `data/`, `ledger.json` y `clauses.json` contienen nombres reales de los rivales y
 su actividad económica, y el repo es público: **nunca commitearlos**.
 
+## mcp
+
+`pnpm mcp:stdio` levanta el transport stdio (el que consume claude code); el http
+va montado en `/mcp` y habla json-rpc. para registrarlo:
+
+```bash
+claude mcp add fantasy -- pnpm --dir ~/dev/fantasy-v3 mcp:stdio
+```
+
+tools: `fantasy_ledger`, `fantasy_steal_targets`, `fantasy_clause_changes`,
+`fantasy_transfers`, `fantasy_player`, `fantasy_manager_history`, `fantasy_sync`.
+
 ## estado
 
 - ✅ fase 0: scaffolding (submódulo, workspace, docker, schema, poller-runner, health)
-- ⏳ fase 1: portar el scraper de v2, pollers reales, backfill desde los json de v2
-- ⏳ fase 2: api de inteligencia + mcp
+- ✅ fase 1: scraper portado, pollers feed/clauses/standings, backfill de v2
+- ✅ fase 2: api de inteligencia + mcp (7 tools, stdio + http en /mcp)
 - ⏳ fase 3: dashboard de inteligencia (ledger, objetivos de robo, gráficos)
 - ⏳ fase 4: paridad con v1 (tarjeta de jugador, filtros, visor de rivales)
 - ⏳ fase 5: acciones de escritura en ui, push, capacitor
