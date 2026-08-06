@@ -1,23 +1,85 @@
-/* tokens visuales de fantasy. extiende los de sis/duckhunt: mismo lenguaje,
-   acento propio (verde césped) y densidad alta para tablas de datos.
+/* tokens visuales de fantasy. mismo lenguaje que sis/duckhunt (nombres canónicos
+   --bg/--bg-card/--accent...) con acento propio (verde césped) y las familias de
+   dominio heredadas de v1 (posiciones, calor de racha). estructura calcada de
+   duckhunt para que un tema claro futuro sea un único bloque [data-theme].
    nunca escribir hex inline: siempre var(--token). */
 :root {
-	--fantasy-bg: #0a0c0e;
-	--fantasy-surface: #14181c;
-	--fantasy-border: #232a31;
-	--fantasy-text: #e6edf3;
-	--fantasy-muted: #8b98a5;
+	/* base */
+	--bg: #0a0c0e;
+	--bg-card: #14181c;
+	--bg-hover: #1a2026;
+	--border: #232a31;
+	--text: #e6edf3;
+	--text-muted: #8b98a5;
+	--text-faint: #5c6773;
 
-	--fantasy-accent: #46d17f;
-	--fantasy-up: #46d17f;
-	--fantasy-down: #e5534b;
-	--fantasy-warn: #f0b040;
+	/* semánticos: accent = interacción/marca, success/danger = deltas de dinero,
+	   warning = cláusulas/blindajes/lo propio */
+	--accent: #46d17f;
+	--success: #46d17f;
+	--warning: #f0b040;
+	--danger: #e5534b;
+	--on-accent: #000000; /* texto sobre rellenos de color (chips solid) */
+	--glass: rgb(0 0 0 / 0.3); /* fondo translúcido de los badges tipo v1 */
 
-	/* posiciones: mismo código de color que v1 (pt/df/mc/dl) */
+	/* posiciones: mismo código de color que v1 (pt/df/mc/dl). la ui interpola
+	   var(--pos-{código}) con el código numérico del juego (1..4). */
 	--pos-gk: #e8c547;
 	--pos-def: #4bb3d4;
 	--pos-mid: #46d17f;
 	--pos-fwd: #e5534b;
+	--pos-1: var(--pos-gk);
+	--pos-2: var(--pos-def);
+	--pos-3: var(--pos-mid);
+	--pos-4: var(--pos-fwd);
 
+	/* racha: escala de calor de v1 por puntos de jornada (<0, 0, 1-4, 5-9, ≥10).
+	   la ui interpola var(--heat-{bucket}), nunca colores directos. */
+	--heat-neg: var(--danger);
+	--heat-zero: var(--text-faint);
+	--heat-low: var(--pos-gk);
+	--heat-mid: var(--success);
+	--heat-high: var(--pos-def);
+
+	/* tipografía y dimensiones */
 	--radius: 2px;
+	--font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+	--font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+	/* el motivo de v1: chips inclinados estilo retransmisión deportiva. el
+	   exterior inclina y el interior contrainclina para que el texto quede recto. */
+	--skew: -10deg;
+	--unskew: 10deg;
+
+	/* spacing scale */
+	--sp-1: 4px;
+	--sp-2: 8px;
+	--sp-3: 12px;
+	--sp-4: 16px;
+	--sp-5: 24px;
+	--sp-6: 32px;
+
+	/* layout: sidebar fija estilo sis, colapsable a raíl de iconos */
+	--sidebar-w: 220px;
+	--sidebar-w-collapsed: 64px;
+
+	/* z-layering: contenido < chrome (sidebar/tabbar) < overlays */
+	--z-sidebar: 20;
+	--z-overlay: 30;
+
+	color-scheme: dark;
+}
+
+/* mapeo de tokens a las custom properties de los componentes de @platform/ui */
+:root {
+	--ui-text: var(--text);
+	--ui-text-muted: var(--text-muted);
+	--ui-accent: var(--accent);
+	--ui-border: var(--border);
+	--ui-bg-card: var(--bg-card);
+	--ui-bg-hover: var(--bg-hover);
+	--ui-radius: var(--radius);
+	--ui-gap: var(--sp-4);
+	--ui-gap-sm: var(--sp-2);
+	--ui-section-gap: var(--sp-6);
 }

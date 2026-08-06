@@ -104,7 +104,7 @@
 		font-size: 0.7rem;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 		font-weight: 500;
 		margin: 0 0 0.5rem;
 	}
@@ -120,29 +120,29 @@
 		align-items: flex-start;
 		gap: 0.1rem;
 		padding: 0.4rem 0.7rem;
-		background: var(--fantasy-surface);
-		border: 1px solid var(--fantasy-border);
+		background: var(--bg-card);
+		border: 1px solid var(--border);
 		border-radius: var(--radius);
-		color: var(--fantasy-text);
+		color: var(--text);
 		cursor: pointer;
 		font: inherit;
 		font-size: 0.75rem;
 	}
 	.pollers button:hover:not(:disabled) {
-		border-color: var(--fantasy-accent);
+		border-color: var(--accent);
 	}
 	.pollers button.failing {
-		border-color: var(--fantasy-down);
+		border-color: var(--danger);
 	}
 	.name {
 		font-weight: 600;
 	}
 	.when {
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 		font-size: 0.7rem;
 	}
 	.fail {
-		color: var(--fantasy-down);
+		color: var(--danger);
 		font-size: 0.7rem;
 	}
 	.columns {
@@ -161,7 +161,7 @@
 		align-items: baseline;
 		gap: 0.5rem;
 		padding: 0.35rem 0;
-		border-bottom: 1px solid var(--fantasy-border);
+		border-bottom: 1px solid var(--border);
 	}
 	.player {
 		flex: 1;
@@ -171,33 +171,33 @@
 		white-space: nowrap;
 	}
 	.player a {
-		color: var(--fantasy-text);
+		color: var(--text);
 		text-decoration: none;
 	}
 	.player a:hover {
-		color: var(--fantasy-accent);
+		color: var(--accent);
 	}
 	.price {
 		font-variant-numeric: tabular-nums;
 	}
 	.price.clause {
-		color: var(--fantasy-warn);
+		color: var(--warning);
 	}
 	.kind {
 		font-size: 0.7rem;
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 	}
 	.kind-clause_up {
-		color: var(--fantasy-warn);
+		color: var(--warning);
 	}
 	.kind-shield_off,
 	.kind-owner_change {
-		color: var(--fantasy-accent);
+		color: var(--accent);
 	}
 	.muted {
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 	}
 	.error {
-		color: var(--fantasy-down);
+		color: var(--danger);
 	}
 </style>

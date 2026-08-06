@@ -109,7 +109,7 @@
 		align-items: center;
 		margin-bottom: 1rem;
 		font-size: 0.8rem;
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 	}
 	.filters label {
 		display: flex;
@@ -119,7 +119,7 @@
 	}
 	.budget {
 		margin-left: auto;
-		color: var(--fantasy-accent);
+		color: var(--accent);
 	}
 	table {
 		width: 100%;
@@ -132,21 +132,21 @@
 		font-size: 0.7rem;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 		padding: 0.4rem 0.5rem;
-		border-bottom: 1px solid var(--fantasy-border);
+		border-bottom: 1px solid var(--border);
 	}
 	td {
 		padding: 0.4rem 0.5rem;
-		border-bottom: 1px solid var(--fantasy-border);
+		border-bottom: 1px solid var(--border);
 		font-variant-numeric: tabular-nums;
 	}
 	td a {
-		color: var(--fantasy-text);
+		color: var(--text);
 		text-decoration: none;
 	}
 	td a:hover {
-		color: var(--fantasy-accent);
+		color: var(--accent);
 	}
 	.num {
 		text-align: right;
@@ -155,17 +155,17 @@
 		font-weight: 600;
 	}
 	.muted {
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 	}
 	.floor {
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 		font-size: 0.75rem;
 	}
 	tr.affordable td.strong {
-		color: var(--fantasy-accent);
+		color: var(--accent);
 	}
 	tr.own td {
-		background: color-mix(in srgb, var(--fantasy-warn) 7%, transparent);
+		background: color-mix(in srgb, var(--warning) 7%, transparent);
 	}
 	.pos {
 		font-size: 0.7rem;
@@ -189,25 +189,25 @@
 	}
 	.tag {
 		font-size: 0.65rem;
-		border: 1px solid var(--fantasy-border);
-		color: var(--fantasy-muted);
+		border: 1px solid var(--border);
+		color: var(--text-muted);
 		padding: 0 0.25rem;
 		border-radius: var(--radius);
 	}
 	.tag.warn {
-		color: var(--fantasy-warn);
-		border-color: var(--fantasy-warn);
+		color: var(--warning);
+		border-color: var(--warning);
 	}
 	.tag.own {
-		color: var(--fantasy-warn);
+		color: var(--warning);
 	}
 	.note {
 		margin-top: 1rem;
 		font-size: 0.75rem;
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 		max-width: 60ch;
 	}
 	.error {
-		color: var(--fantasy-down);
+		color: var(--danger);
 	}
 </style>

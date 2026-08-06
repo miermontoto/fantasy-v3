@@ -119,9 +119,9 @@
 	}
 	.managers a {
 		font-size: 0.75rem;
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 		text-decoration: none;
-		border: 1px solid var(--fantasy-border);
+		border: 1px solid var(--border);
 		border-radius: var(--radius);
 		padding: 0.15rem 0.4rem;
 		max-width: 12rem;
@@ -131,8 +131,8 @@
 	}
 	.managers a.active,
 	.managers a:hover {
-		color: var(--fantasy-text);
-		border-color: var(--fantasy-accent);
+		color: var(--text);
+		border-color: var(--accent);
 	}
 	.filters {
 		display: flex;
@@ -141,7 +141,7 @@
 		gap: 0.75rem;
 		margin-bottom: 0.5rem;
 		font-size: 0.8rem;
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 	}
 	.filters label {
 		display: flex;
@@ -158,7 +158,7 @@
 		font-size: 0.7rem;
 		font-weight: 600;
 		background: none;
-		border: 1px solid var(--fantasy-border);
+		border: 1px solid var(--border);
 		border-radius: var(--radius);
 		padding: 0.15rem 0.45rem;
 		cursor: pointer;
@@ -183,10 +183,10 @@
 	input[type='search'] {
 		font: inherit;
 		font-size: 0.8rem;
-		background: var(--fantasy-surface);
-		border: 1px solid var(--fantasy-border);
+		background: var(--bg-card);
+		border: 1px solid var(--border);
 		border-radius: var(--radius);
-		color: var(--fantasy-text);
+		color: var(--text);
 		padding: 0.2rem 0.4rem;
 	}
 	.totals {
@@ -195,15 +195,15 @@
 	}
 	.tag {
 		font-size: 0.65rem;
-		color: var(--fantasy-accent);
-		border: 1px solid var(--fantasy-accent);
+		color: var(--accent);
+		border: 1px solid var(--accent);
 		padding: 0 0.25rem;
 		border-radius: var(--radius);
 	}
 	.muted {
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 	}
 	.error {
-		color: var(--fantasy-down);
+		color: var(--danger);
 	}
 </style>

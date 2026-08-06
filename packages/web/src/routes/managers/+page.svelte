@@ -36,26 +36,26 @@
 	}
 	li {
 		padding: 0.4rem 0;
-		border-bottom: 1px solid var(--fantasy-border);
+		border-bottom: 1px solid var(--border);
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
 	}
 	a {
-		color: var(--fantasy-text);
+		color: var(--text);
 		text-decoration: none;
 	}
 	a:hover {
-		color: var(--fantasy-accent);
+		color: var(--accent);
 	}
 	.tag {
 		font-size: 0.65rem;
-		color: var(--fantasy-accent);
-		border: 1px solid var(--fantasy-accent);
+		color: var(--accent);
+		border: 1px solid var(--accent);
 		padding: 0 0.25rem;
 		border-radius: var(--radius);
 	}
 	.error {
-		color: var(--fantasy-down);
+		color: var(--danger);
 	}
 </style>

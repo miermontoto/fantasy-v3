@@ -30,27 +30,27 @@
 		font-size: 1.4rem;
 		font-weight: 600;
 		margin: 0;
-		color: var(--fantasy-accent);
+		color: var(--accent);
 	}
 	.sub {
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 		font-size: 0.85rem;
 		margin: 0 0 1rem;
 	}
 	.btn {
 		display: block;
 		padding: 0.6rem 1rem;
-		border: 1px solid var(--fantasy-accent);
+		border: 1px solid var(--accent);
 		border-radius: var(--radius);
-		color: var(--fantasy-accent);
+		color: var(--accent);
 		text-decoration: none;
 		font-size: 0.9rem;
 	}
 	.btn:hover {
-		background: color-mix(in srgb, var(--fantasy-accent) 12%, transparent);
+		background: color-mix(in srgb, var(--accent) 12%, transparent);
 	}
 	.error {
-		color: var(--fantasy-down);
+		color: var(--danger);
 		font-size: 0.8rem;
 		margin: 0;
 	}

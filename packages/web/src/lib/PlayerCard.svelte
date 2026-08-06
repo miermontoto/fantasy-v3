@@ -61,11 +61,11 @@
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.4rem 0.5rem;
-		border-bottom: 1px solid var(--fantasy-border);
+		border-bottom: 1px solid var(--border);
 		font-size: 0.85rem;
 	}
 	.card.stealable {
-		background: color-mix(in srgb, var(--fantasy-accent) 7%, transparent);
+		background: color-mix(in srgb, var(--accent) 7%, transparent);
 	}
 	.pos {
 		font-size: 0.7rem;
@@ -84,25 +84,25 @@
 		color: var(--pos-fwd);
 	}
 	.name {
-		color: var(--fantasy-text);
+		color: var(--text);
 		text-decoration: none;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 	.name:hover {
-		color: var(--fantasy-accent);
+		color: var(--accent);
 	}
 	.status {
 		font-size: 0.65rem;
 		padding: 0 0.25rem;
 		border-radius: var(--radius);
 		border: 1px solid currentColor;
-		color: var(--fantasy-warn);
+		color: var(--warning);
 	}
 	.status-injury,
 	.status-red {
-		color: var(--fantasy-down);
+		color: var(--danger);
 	}
 	.streak {
 		display: flex;
@@ -113,16 +113,16 @@
 		text-align: center;
 		font-size: 0.65rem;
 		font-variant-numeric: tabular-nums;
-		background: var(--fantasy-surface);
-		border: 1px solid var(--fantasy-border);
+		background: var(--bg-card);
+		border: 1px solid var(--border);
 		border-radius: var(--radius);
 	}
 	.pip.none {
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 	}
 	.pip.good {
-		color: var(--fantasy-up);
-		border-color: var(--fantasy-up);
+		color: var(--success);
+		border-color: var(--success);
 	}
 	.value,
 	.clause {
@@ -130,18 +130,18 @@
 		font-variant-numeric: tabular-nums;
 	}
 	.trend.up {
-		color: var(--fantasy-up);
+		color: var(--success);
 	}
 	.trend.down {
-		color: var(--fantasy-down);
+		color: var(--danger);
 	}
 	.shield {
-		color: var(--fantasy-warn);
+		color: var(--warning);
 	}
 	.tag {
 		font-size: 0.65rem;
-		color: var(--fantasy-muted);
-		border: 1px solid var(--fantasy-border);
+		color: var(--text-muted);
+		border: 1px solid var(--border);
 		padding: 0 0.25rem;
 		border-radius: var(--radius);
 	}

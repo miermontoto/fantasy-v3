@@ -1,6 +1,5 @@
 <script lang="ts">
-	import '@platform/ui/base.css';
-	import '../lib/styles/tokens.css';
+	import '../lib/styles/app.css';
 	import { page } from '$app/state';
 
 	let { children } = $props();
@@ -30,36 +29,36 @@
 <style>
 	.shell {
 		min-height: 100vh;
-		background: var(--fantasy-bg);
-		color: var(--fantasy-text);
+		background: var(--bg);
+		color: var(--text);
 	}
 	header {
 		display: flex;
 		align-items: baseline;
 		gap: 1.5rem;
 		padding: 0.75rem 1rem;
-		border-bottom: 1px solid var(--fantasy-border);
+		border-bottom: 1px solid var(--border);
 		position: sticky;
 		top: 0;
-		background: var(--fantasy-bg);
+		background: var(--bg);
 		z-index: 10;
 	}
 	.brand {
 		font-weight: 600;
-		color: var(--fantasy-accent);
+		color: var(--accent);
 	}
 	nav {
 		display: flex;
 		gap: 1rem;
 	}
 	nav a {
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 		text-decoration: none;
 		font-size: 0.9rem;
 	}
 	nav a.active,
 	nav a:hover {
-		color: var(--fantasy-text);
+		color: var(--text);
 	}
 	main {
 		padding: 1rem;

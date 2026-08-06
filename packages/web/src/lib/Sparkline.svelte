@@ -37,13 +37,13 @@
 		display: block;
 	}
 	path.up {
-		stroke: var(--fantasy-up);
+		stroke: var(--success);
 	}
 	path.down {
-		stroke: var(--fantasy-down);
+		stroke: var(--danger);
 	}
 	.empty {
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 		font-size: 0.75rem;
 	}
 </style>

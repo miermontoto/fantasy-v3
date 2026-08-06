@@ -120,8 +120,8 @@
 		flex-wrap: wrap;
 		gap: 2rem;
 		padding: 0.75rem 1rem;
-		border: 1px solid var(--fantasy-border);
-		background: var(--fantasy-surface);
+		border: 1px solid var(--border);
+		background: var(--bg-card);
 		margin-bottom: 1rem;
 	}
 	.summary div {
@@ -133,7 +133,7 @@
 		font-size: 0.7rem;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 	}
 	.figure {
 		font-size: 1.25rem;
@@ -141,7 +141,7 @@
 	}
 	.figure.small {
 		font-size: 0.9rem;
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 	}
 	table {
 		width: 100%;
@@ -154,13 +154,13 @@
 		font-size: 0.7rem;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 		padding: 0.4rem 0.5rem;
-		border-bottom: 1px solid var(--fantasy-border);
+		border-bottom: 1px solid var(--border);
 	}
 	td {
 		padding: 0.45rem 0.5rem;
-		border-bottom: 1px solid var(--fantasy-border);
+		border-bottom: 1px solid var(--border);
 		font-variant-numeric: tabular-nums;
 	}
 	.num {
@@ -170,18 +170,18 @@
 		font-weight: 600;
 	}
 	tr.self td {
-		background: color-mix(in srgb, var(--fantasy-accent) 8%, transparent);
+		background: color-mix(in srgb, var(--accent) 8%, transparent);
 	}
 	.down {
-		color: var(--fantasy-down);
+		color: var(--danger);
 	}
 	.muted {
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 	}
 	.tag {
 		font-size: 0.65rem;
-		color: var(--fantasy-accent);
-		border: 1px solid var(--fantasy-accent);
+		color: var(--accent);
+		border: 1px solid var(--accent);
 		padding: 0 0.25rem;
 		margin-left: 0.35rem;
 		border-radius: var(--radius);
@@ -189,10 +189,10 @@
 	.note {
 		margin-top: 1rem;
 		font-size: 0.75rem;
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 		max-width: 60ch;
 	}
 	.error {
-		color: var(--fantasy-down);
+		color: var(--danger);
 	}
 </style>

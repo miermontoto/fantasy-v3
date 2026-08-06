@@ -33,9 +33,9 @@
 
 		const chart = echarts.init(chartEl, null, { renderer: 'canvas' });
 		const style = getComputedStyle(document.documentElement);
-		const accent = style.getPropertyValue('--fantasy-accent').trim();
-		const warn = style.getPropertyValue('--fantasy-warn').trim();
-		const muted = style.getPropertyValue('--fantasy-muted').trim();
+		const accent = style.getPropertyValue('--accent').trim();
+		const warn = style.getPropertyValue('--warning').trim();
+		const muted = style.getPropertyValue('--text-muted').trim();
 
 		chart.setOption({
 			grid: { left: 56, right: 16, top: 28, bottom: 28 },
@@ -50,7 +50,7 @@
 			yAxis: {
 				type: 'value',
 				axisLabel: { color: muted, fontSize: 10, formatter: (v: number) => money(v) },
-				splitLine: { lineStyle: { color: style.getPropertyValue('--fantasy-border').trim() } },
+				splitLine: { lineStyle: { color: style.getPropertyValue('--border').trim() } },
 			},
 			series: [
 				{ name: 'valor', type: 'line', smooth: true, showSymbol: false, data: history.map((p) => p.value), lineStyle: { color: accent } , itemStyle: { color: accent } },
@@ -125,8 +125,8 @@
 		flex-wrap: wrap;
 		gap: 2rem;
 		padding: 0.75rem 1rem;
-		border: 1px solid var(--fantasy-border);
-		background: var(--fantasy-surface);
+		border: 1px solid var(--border);
+		background: var(--bg-card);
 		margin-bottom: 1rem;
 	}
 	.summary div {
@@ -138,7 +138,7 @@
 		font-size: 0.7rem;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 	}
 	.figure {
 		font-size: 1.25rem;
@@ -149,16 +149,16 @@
 		height: 320px;
 	}
 	.up {
-		color: var(--fantasy-up);
+		color: var(--success);
 	}
 	.down {
-		color: var(--fantasy-down);
+		color: var(--danger);
 	}
 	.muted {
-		color: var(--fantasy-muted);
+		color: var(--text-muted);
 	}
 	.error {
-		color: var(--fantasy-down);
+		color: var(--danger);
 	}
 	.pos {
 		font-size: 0.75rem;
