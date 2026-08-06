@@ -95,6 +95,7 @@ export interface RosterPlayer {
 	playerId: string;
 	name: string;
 	position: number;
+	photoUrl: string | null;
 	value: number;
 	prevValue: number | null;
 	points: number;

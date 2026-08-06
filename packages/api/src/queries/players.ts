@@ -84,6 +84,7 @@ export interface RosterEntry {
 	playerId: string;
 	name: string;
 	position: number;
+	photoUrl: string | null;
 	value: number;
 	prevValue: number | null;
 	points: number;
@@ -110,6 +111,7 @@ export function roster(communityId: string, ownerId: string): RosterEntry[] {
 				playerId: snapshot.playerId,
 				name: info?.name ?? snapshot.playerId,
 				position: info?.position ?? 0,
+				photoUrl: info?.photoUrl ?? null,
 				value: snapshot.value,
 				prevValue: snapshot.prevValue,
 				points: snapshot.points,
