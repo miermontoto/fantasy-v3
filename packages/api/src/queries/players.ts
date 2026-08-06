@@ -119,6 +119,49 @@ export function latestClauseDetails(communityId: string) {
 	return seen;
 }
 
+/**
+ * alias, no interface, a propósito: el statement preparado de drizzle recibe los
+ * valores como `Record<string, unknown>` y una interface no es asignable a un
+ * índice de string.
+ */
+export type ClauseDetailUpdate = {
+	/** id del snapshot ya guardado al que se le añade el detalle */
+	snapshotId: number;
+	clauseFloor: number | null;
+	clauseMultiplierReal: number;
+	purchasePrice: number | null;
+	purchaseDate: string | null;
+};
+
+/**
+ * enriquece snapshots ya guardados con lo que solo da el endpoint de detalle.
+ *
+ * prepara UN statement y lo reutiliza para todas las filas. el bucle que hacía un
+ * `update().run()` por jugador preparaba 182 statements por pasada, que es el
+ * mismo patrón que reventaba el binding nativo de better-sqlite3 en el contenedor
+ * (ver `INSERT_CHUNK`). aquí no se puede agrupar en una sentencia porque cada
+ * fila lleva valores distintos, así que lo que se comparte es el statement.
+ */
+export function applyClauseDetails(rows: ClauseDetailUpdate[]): number {
+	if (rows.length === 0) return 0;
+	const db = getDb();
+	const update = db
+		.update(playerSnapshot)
+		.set({
+			clauseFloor: sql`${sql.placeholder('clauseFloor')}`,
+			clauseMultiplierReal: sql`${sql.placeholder('clauseMultiplierReal')}`,
+			purchasePrice: sql`${sql.placeholder('purchasePrice')}`,
+			purchaseDate: sql`${sql.placeholder('purchaseDate')}`,
+		})
+		.where(eq(playerSnapshot.id, sql.placeholder('snapshotId')))
+		.prepare();
+
+	db.transaction(() => {
+		for (const row of rows) update.run(row);
+	});
+	return rows.length;
+}
+
 /** serie temporal de un jugador: alimenta los gráficos de valor y cláusula */
 export function playerHistory(playerId: string, sinceTs: number) {
 	return getDb()

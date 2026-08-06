@@ -12,14 +12,18 @@
 //
 // es cara (una petición por jugador), así que corre con menos frecuencia.
 
-import { eq } from 'drizzle-orm';
 import type { Poller } from '../poller-runner.js';
 import { POLL_INTERVAL } from '../../constants.js';
 import { parsePlayerCommunityInfo } from '../../scraper/json.js';
 import { getCommunityId, isConfigured, withSession } from '../session.js';
-import { latestOwnedSnapshots } from '../../queries/players.js';
-import { getDb } from '../../db/connection.js';
-import { playerSnapshot } from '../../db/schema.js';
+import { applyClauseDetails, latestOwnedSnapshots, type ClauseDetailUpdate } from '../../queries/players.js';
+
+/**
+ * cada cuántos jugadores se vuelca lo acumulado. escribir al final del todo
+ * perdería la pasada entera si falla la petición 150 de 182, y escribir fila a
+ * fila era justo lo que preparaba un statement por jugador.
+ */
+const FLUSH_EVERY = 50;
 
 export const clauseDetailPoller: Poller = {
 	name: 'clause-detail',
@@ -28,9 +32,14 @@ export const clauseDetailPoller: Poller = {
 
 	async runOnce() {
 		const communityId = await getCommunityId();
-		const db = getDb();
 		const owned = latestOwnedSnapshots(communityId);
 		let updated = 0;
+		let pending: ClauseDetailUpdate[] = [];
+
+		const flush = () => {
+			updated += applyClauseDetails(pending);
+			pending = [];
+		};
 
 		for (const snapshot of owned) {
 			const raw = await withSession((browser) => browser.playerCommunityInfo(snapshot.playerId));
@@ -38,18 +47,17 @@ export const clauseDetailPoller: Poller = {
 			if (!info) continue;
 
 			const floor = info.clausePercentage > 0 ? Math.round(info.clauseValue / (1 + info.clausePercentage / 100)) : null;
-			db.update(playerSnapshot)
-				.set({
-					clauseFloor: floor,
-					// percentage 50 → multiplicador 1.5
-					clauseMultiplierReal: 1 + info.clausePercentage / 100,
-					purchasePrice: info.purchasePrice,
-					purchaseDate: info.purchaseDate,
-				})
-				.where(eq(playerSnapshot.id, snapshot.id))
-				.run();
-			updated += 1;
+			pending.push({
+				snapshotId: snapshot.id,
+				clauseFloor: floor,
+				// percentage 50 → multiplicador 1.5
+				clauseMultiplierReal: 1 + info.clausePercentage / 100,
+				purchasePrice: info.purchasePrice,
+				purchaseDate: info.purchaseDate,
+			});
+			if (pending.length >= FLUSH_EVERY) flush();
 		}
+		flush();
 
 		console.log(`[poller:clause-detail] ${updated}/${owned.length} jugadores con suelo y multiplicador reales`);
 	},
