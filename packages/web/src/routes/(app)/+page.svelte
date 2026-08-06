@@ -3,7 +3,7 @@
 	// real (quién puede pagar qué), no la clasificación por puntos.
 	import { api, type ManagerRow } from '$lib/api';
 	import { money, relativeTime } from '$lib/format';
-	import Sparkline from '$lib/Sparkline.svelte';
+	import Sparkline from '$lib/components/Sparkline.svelte';
 
 	let managers = $state<ManagerRow[]>([]);
 	let history = $state<Record<string, number[]>>({});
