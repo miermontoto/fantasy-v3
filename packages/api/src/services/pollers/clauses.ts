@@ -65,6 +65,9 @@ export const clausesPoller: Poller = {
 			shield: p.shield,
 			listed: p.listed,
 			clausesRank: p.clausesRank,
+			prevValue: p.previousValue,
+			status: p.status,
+			streakJson: JSON.stringify(p.streak),
 		}));
 
 		const changes: ClauseChangeInsert[] = [];

@@ -131,6 +131,12 @@ export const playerSnapshot = sqliteTable(
 		shield: integer('shield').notNull().default(0),
 		listed: integer('listed', { mode: 'boolean' }).notNull().default(false),
 		clausesRank: integer('clauses_rank'),
+		/** valor de la pasada anterior del juego: da la tendencia sin mirar el histórico */
+		prevValue: integer('prev_value'),
+		/** injury | doubt | red | five | null */
+		status: text('status'),
+		/** puntos de las últimas jornadas, json */
+		streakJson: text('streak_json'),
 	},
 	(t) => [
 		index('player_snapshot_player_ts_idx').on(t.playerId, t.ts),

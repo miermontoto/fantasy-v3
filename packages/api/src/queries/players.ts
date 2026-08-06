@@ -79,3 +79,50 @@ export function getPlayer(playerId: string) {
 	const [row] = getDb().select().from(player).where(eq(player.id, playerId)).limit(1).all();
 	return row ?? null;
 }
+
+export interface RosterEntry {
+	playerId: string;
+	name: string;
+	position: number;
+	value: number;
+	prevValue: number | null;
+	points: number;
+	average: number;
+	clause: number | null;
+	clauseMultiplier: number | null;
+	shield: number;
+	listed: boolean;
+	clausesRank: number | null;
+	status: string | null;
+	streak: (number | null)[];
+	ownerId: string | null;
+}
+
+/** plantilla de un mánager según el último snapshot de cada jugador */
+export function roster(communityId: string, ownerId: string): RosterEntry[] {
+	const players = new Map(getDb().select().from(player).all().map((p) => [p.id, p]));
+
+	return latestOwnedSnapshots(communityId)
+		.filter((snapshot) => snapshot.ownerId === ownerId)
+		.map((snapshot) => {
+			const info = players.get(snapshot.playerId);
+			return {
+				playerId: snapshot.playerId,
+				name: info?.name ?? snapshot.playerId,
+				position: info?.position ?? 0,
+				value: snapshot.value,
+				prevValue: snapshot.prevValue,
+				points: snapshot.points,
+				average: snapshot.average,
+				clause: snapshot.clause,
+				clauseMultiplier: snapshot.clauseMultiplier,
+				shield: snapshot.shield,
+				listed: snapshot.listed,
+				clausesRank: snapshot.clausesRank,
+				status: snapshot.status,
+				streak: snapshot.streakJson ? (JSON.parse(snapshot.streakJson) as (number | null)[]) : [],
+				ownerId: snapshot.ownerId,
+			};
+		})
+		.sort((a, b) => a.position - b.position || b.value - a.value);
+}

@@ -176,7 +176,7 @@ recurso no vale) y detección de replay que revoca la cadena entera del cliente.
 - ✅ fase 1: scraper portado, pollers feed/clauses/standings, backfill de v2
 - ✅ fase 2: api de inteligencia + mcp (7 tools, stdio + http en /mcp)
 - ✅ fase 3: dashboard de inteligencia (liga, cláusulas, actividad, ficha con gráfico)
-- ⏳ fase 4: paridad con v1 (tarjeta de jugador, filtros, visor de rivales)
+- ✅ fase 4: paridad con v1 (tarjeta de jugador, filtros, visor de plantillas)
 - ⏳ fase 5: acciones de escritura en ui, push, capacitor
 
 mientras la fase 1 no esté probada, **v2 sigue sincronizando**: perder eventos del

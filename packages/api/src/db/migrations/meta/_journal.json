@@ -29,6 +29,13 @@
       "when": 1786021551265,
       "tag": "0003_remaining_now",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1786022045258,
+      "tag": "0004_player_card_fields",
+      "breakpoints": true
     }
   ]
 }

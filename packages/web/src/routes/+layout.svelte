@@ -8,6 +8,7 @@
 	const nav = [
 		{ href: '/', label: 'liga' },
 		{ href: '/clauses', label: 'cláusulas' },
+		{ href: '/managers', label: 'plantillas' },
 		{ href: '/activity', label: 'actividad' },
 	];
 </script>

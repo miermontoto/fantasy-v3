@@ -83,6 +83,29 @@ export interface PlayerPoint {
 	shield: number;
 }
 
+export interface RosterPlayer {
+	playerId: string;
+	name: string;
+	position: number;
+	value: number;
+	prevValue: number | null;
+	points: number;
+	average: number;
+	clause: number | null;
+	clauseMultiplier: number | null;
+	shield: number;
+	listed: boolean;
+	clausesRank: number | null;
+	status: string | null;
+	streak: (number | null)[];
+}
+
+export interface ManagerInfo {
+	id: string;
+	name: string;
+	isSelf: boolean;
+}
+
 export interface PollerRow {
 	name: string;
 	intervalMs: number;
@@ -112,6 +135,8 @@ export const api = {
 		get<{ player: { id: string; name: string; position: number }; history: PlayerPoint[] }>(
 			`/players/${id}?days=${days}`,
 		),
+	managers: () => get<{ managers: ManagerInfo[] }>('/managers'),
+	roster: (id: string) => get<{ players: RosterPlayer[] }>(`/managers/${id}/roster`),
 	pollers: () => get<{ pollers: PollerRow[] }>('/sync'),
 	runPoller: (name: string) => post<{ ok: boolean; error?: string }>(`/sync/${name}`),
 };

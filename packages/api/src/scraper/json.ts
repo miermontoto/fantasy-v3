@@ -46,6 +46,10 @@ export interface PlayerListItem {
 	shield: number;
 	listed: boolean;
 	photoUrl: string | null;
+	/** injury | doubt | red | five | null: lo pinta la tarjeta como aviso */
+	status: string | null;
+	/** puntos de las últimas jornadas; "-" (sin jugar) se guarda como null */
+	streak: (number | null)[];
 }
 
 export function parsePlayersList(data: unknown): PlayerListItem[] {
@@ -66,6 +70,10 @@ export function parsePlayersList(data: unknown): PlayerListItem[] {
 		const shield =
 			typeof shieldRaw === 'number' ? shieldRaw : typeof shieldRaw === 'string' && shieldRaw.length > 0 ? 1 : 0;
 
+		const streak = Array.isArray(p.streak)
+			? p.streak.map((v) => (typeof v === 'number' ? v : Number.isFinite(Number(v)) ? Number(v) : null))
+			: [];
+
 		players.push({
 			id: String(p.id),
 			name: str(p.name),
@@ -83,6 +91,8 @@ export function parsePlayersList(data: unknown): PlayerListItem[] {
 			shield,
 			listed: p.id_market !== null && p.id_market !== undefined,
 			photoUrl: p.photoUrl === undefined ? null : str(p.photoUrl),
+			status: p.status === null || p.status === undefined ? null : str(p.status),
+			streak,
 		});
 	}
 	return players;
@@ -167,7 +177,7 @@ export interface BalanceMovement {
 /**
  * historial de movimientos del mánager propio. es la única fuente exacta: incluye
  * las penalizaciones por subir cláusula y las bonificaciones de saldo inicial que
- * ningún otro endpoint expone (y que demuestran que el presupuesto no es uniforme).
+ * ningún otro endpoint expone.
  */
 export function parseBalanceHistory(data: unknown): BalanceMovement[] {
 	const d = asRecord(data);
