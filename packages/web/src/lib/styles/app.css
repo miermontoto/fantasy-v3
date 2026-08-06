@@ -241,6 +241,105 @@ input[type='checkbox']:focus-visible {
 	color: var(--text-muted);
 }
 
+/* ── shell: sidebar fija estilo sis; en móvil, cabecera + tabbar. el
+      interior del chrome se estiliza en (app)/+layout.svelte ──────────── */
+
+.app-layout {
+	display: flex;
+	min-height: 100vh;
+}
+
+.sidebar {
+	position: fixed;
+	inset-block: 0;
+	left: 0;
+	width: var(--sidebar-w);
+	display: flex;
+	flex-direction: column;
+	gap: var(--sp-2);
+	padding: var(--sp-4) var(--sp-3);
+	background: var(--bg-card);
+	border-right: 1px solid var(--border);
+	transition: width 0.16s ease;
+	z-index: var(--z-sidebar);
+	overflow: hidden;
+}
+
+.app-layout.sidebar-collapsed .sidebar {
+	width: var(--sidebar-w-collapsed);
+}
+
+.main-content {
+	flex: 1;
+	min-width: 0;
+	margin-left: var(--sidebar-w);
+	padding: var(--sp-6);
+	max-width: 1200px;
+	transition: margin-left 0.16s ease;
+}
+
+.app-layout.sidebar-collapsed .main-content {
+	margin-left: var(--sidebar-w-collapsed);
+}
+
+.mobile-header,
+.mobile-tabbar {
+	display: none;
+}
+
+/* breakpoint móvil único del proyecto: 768px (css no admite var() en @media) */
+@media (max-width: 768px) {
+	.app-layout {
+		flex-direction: column;
+	}
+
+	.sidebar {
+		display: none;
+	}
+
+	.main-content,
+	.app-layout.sidebar-collapsed .main-content {
+		margin-left: 0;
+		padding: var(--sp-3) var(--sp-3) calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--sp-4));
+	}
+
+	.mobile-header {
+		display: flex;
+		align-items: center;
+		gap: var(--sp-3);
+		padding: var(--sp-3);
+		background: var(--bg-card);
+		border-bottom: 1px solid var(--border);
+	}
+
+	.mobile-tabbar {
+		display: flex;
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		background: var(--bg-card);
+		border-top: 1px solid var(--border);
+		padding-bottom: env(safe-area-inset-bottom);
+		z-index: var(--z-sidebar);
+	}
+
+	.mobile-tabbar a {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+		padding: var(--sp-2) 0;
+		font-size: 0.65rem;
+		color: var(--text-muted);
+	}
+
+	.mobile-tabbar a.active {
+		color: var(--accent);
+	}
+}
+
 /* ── tabla densa de datos: clases globales, las tres tablas del proyecto
       son idénticas y un componente con slots no aportaría nada ────────── */
 

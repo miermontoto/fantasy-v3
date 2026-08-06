@@ -124,6 +124,7 @@ export interface PollerRow {
 }
 
 export const api = {
+	health: () => http.get<{ status: string; version: string }>('/health'),
 	me: () => http.get<{ authenticated: boolean; user: SessionUser }>('/auth/me'),
 	logout: () => http.post<{ ok: boolean }>('/auth/logout'),
 	ledger: () => http.get<{ communityId: string; managers: ManagerRow[] }>('/ledger'),

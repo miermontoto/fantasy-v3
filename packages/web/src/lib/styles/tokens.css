@@ -59,9 +59,11 @@
 	--sp-5: 24px;
 	--sp-6: 32px;
 
-	/* layout: sidebar fija estilo sis, colapsable a raíl de iconos */
+	/* layout: sidebar fija estilo sis, colapsable a raíl de iconos; en móvil
+	   se sustituye por una tabbar inferior */
 	--sidebar-w: 220px;
 	--sidebar-w-collapsed: 64px;
+	--tabbar-h: 56px;
 
 	/* z-layering: contenido < chrome (sidebar/tabbar) < overlays */
 	--z-sidebar: 20;
