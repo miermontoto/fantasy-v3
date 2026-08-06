@@ -147,6 +147,20 @@ claude mcp add fantasy -- pnpm --dir ~/dev/fantasy-v3 mcp:stdio
 tools: `fantasy_ledger`, `fantasy_steal_targets`, `fantasy_clause_changes`,
 `fantasy_transfers`, `fantasy_player`, `fantasy_manager_history`, `fantasy_sync`.
 
+el transport http va protegido por un authorization server oauth 2.1 propio
+(`routes/oauth-mcp.ts` + `queries/mcp-oauth.ts`), con registro dinámico: el
+cliente descubre todo solo y no hace falta configurar credenciales.
+
+- `/.well-known/oauth-protected-resource` (rfc 9728) → a qué AS ir
+- `/.well-known/oauth-authorization-server` (rfc 8414) → dónde están sus endpoints
+- `/api/oauth/mcp/register` (rfc 7591) → alta dinámica del cliente
+- `/api/oauth/mcp/authorize` → consentimiento, reutiliza la sesión del dashboard
+- `/api/oauth/mcp/token` → code + refresh rotativo
+
+propiedades verificadas: PKCE S256 obligatorio, codes de un solo uso con ttl de
+60s, tokens guardados solo como sha256, binding de audiencia (un token para otro
+recurso no vale) y detección de replay que revoca la cadena entera del cliente.
+
 ## estado
 
 - ✅ fase 0: scaffolding (submódulo, workspace, docker, schema, poller-runner, health)

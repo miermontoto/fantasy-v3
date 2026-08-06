@@ -247,3 +247,76 @@ export const appUser = sqliteTable('app_user', {
 
 /** tabla de sesiones canónica de la plataforma */
 export const authSession = defineSessionTable(() => appUser.id);
+
+// ===== oauth 2.1 para mcp =====
+// fantasy actúa como authorization server de los clientes mcp: dcr → authorize →
+// token → refresh. separado de la sesión del dashboard (cookie) porque un cliente
+// mcp no tiene navegador donde guardarla.
+
+/** clientes dados de alta por dynamic client registration (rfc 7591) */
+export const mcpOauthClient = sqliteTable('mcp_oauth_client', {
+	clientId: text('client_id').primaryKey(),
+	name: text('name'),
+	redirectUrisJson: text('redirect_uris_json').notNull(),
+	grantTypesJson: text('grant_types_json').notNull(),
+	tokenEndpointAuthMethod: text('token_endpoint_auth_method').notNull().default('none'),
+	createdAt: integer('created_at').notNull(),
+	lastUsedAt: integer('last_used_at'),
+});
+
+/** authorization codes de vida corta y un solo uso */
+export const mcpOauthCode = sqliteTable(
+	'mcp_oauth_code',
+	{
+		codeHash: text('code_hash').primaryKey(),
+		userId: integer('user_id').notNull(),
+		clientId: text('client_id').notNull(),
+		redirectUri: text('redirect_uri').notNull(),
+		codeChallenge: text('code_challenge').notNull(),
+		codeChallengeMethod: text('code_challenge_method').notNull(),
+		/** audiencia solicitada: se propaga al token para el binding */
+		resource: text('resource'),
+		scope: text('scope').notNull(),
+		expiresAt: integer('expires_at').notNull(),
+		consumedAt: integer('consumed_at'),
+		createdAt: integer('created_at').notNull(),
+	},
+	(t) => [index('idx_mcp_code_expires').on(t.expiresAt)],
+);
+
+/** access tokens activos; se guardan hasheados, nunca en claro */
+export const mcpOauthAccessToken = sqliteTable(
+	'mcp_oauth_access_token',
+	{
+		tokenHash: text('token_hash').primaryKey(),
+		userId: integer('user_id').notNull(),
+		clientId: text('client_id').notNull(),
+		scope: text('scope').notNull(),
+		/** audiencia del recurso: un token para otro recurso no vale aquí */
+		resource: text('resource').notNull(),
+		expiresAt: integer('expires_at').notNull(),
+		createdAt: integer('created_at').notNull(),
+		lastUsedAt: integer('last_used_at'),
+	},
+	(t) => [index('idx_mcp_access_expires').on(t.expiresAt)],
+);
+
+/**
+ * refresh tokens con rotación: cada canje marca el viejo con replacedByHash.
+ * si reaparece uno ya rotado se revoca la cadena entera (detección de replay).
+ */
+export const mcpOauthRefreshToken = sqliteTable(
+	'mcp_oauth_refresh_token',
+	{
+		tokenHash: text('token_hash').primaryKey(),
+		userId: integer('user_id').notNull(),
+		clientId: text('client_id').notNull(),
+		scope: text('scope').notNull(),
+		resource: text('resource').notNull(),
+		expiresAt: integer('expires_at').notNull(),
+		createdAt: integer('created_at').notNull(),
+		replacedByHash: text('replaced_by_hash'),
+		revokedAt: integer('revoked_at'),
+	},
+	(t) => [index('idx_mcp_refresh_expires').on(t.expiresAt)],
+);

@@ -56,5 +56,12 @@ export type Position = (typeof POSITION)[keyof typeof POSITION];
 export const SESSION_COOKIE_NAME = 'fantasy_session';
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
-/** cabecera del token estático que protege el transport http del mcp */
-export const MCP_TOKEN_HEADER = 'x-fantasy-token';
+
+// oauth 2.1 del mcp
+export const MCP_OAUTH = {
+	/** los codes viven lo justo para el round-trip del cliente */
+	CODE_TTL_MS: 60 * 1000,
+	ACCESS_TTL_MS: 60 * 60 * 1000,
+	REFRESH_TTL_MS: 30 * 24 * 60 * 60 * 1000,
+	SCOPE: 'fantasy:read',
+} as const;

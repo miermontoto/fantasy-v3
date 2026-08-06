@@ -1,14 +1,37 @@
-// transport http del mcp. expone las mismas tools que stdio sobre json-rpc.
+// transport http del mcp: json-rpc sobre las mismas tools que stdio.
 //
-// implementación mínima y sin estado: cada petición se resuelve contra el mismo
-// dispatch, sin sesiones ni transporte con estado. suficiente para un cliente
-// local o un túnel privado; si algún día se abre a internet hará falta auth.
+// autenticación por bearer emitido por el authorization server propio
+// (routes/oauth-mcp.ts). un 401 devuelve la cabecera WWW-Authenticate con el
+// puntero a los metadatos del recurso, que es lo que dispara el descubrimiento
+// y el registro dinámico del cliente sin configuración manual.
 
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import { dispatch, TOOLS } from './server.js';
 import { VERSION } from '../constants.js';
+import { validateAccessToken } from '../queries/mcp-oauth.js';
+import { publicBaseUrl, resourceUrl } from '../routes/oauth-mcp.js';
 
 const mcp = new Hono();
+
+function unauthorized(c: Context, description?: string): Response {
+	const metadata = `${publicBaseUrl()}/.well-known/oauth-protected-resource`;
+	c.header(
+		'WWW-Authenticate',
+		`Bearer resource_metadata="${metadata}"${description ? `, error="invalid_token", error_description="${description}"` : ''}`,
+	);
+	return c.json({ error: 'unauthorized' }, 401);
+}
+
+mcp.use('*', async (c, next) => {
+	const header = c.req.header('authorization') ?? '';
+	const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+	if (!token) return unauthorized(c);
+
+	const granted = validateAccessToken(token, resourceUrl());
+	if (!granted) return unauthorized(c, 'token inválido o caducado');
+
+	await next();
+});
 
 interface JsonRpcRequest {
 	jsonrpc?: string;

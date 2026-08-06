@@ -9,8 +9,10 @@ import clauses from './routes/clauses.js';
 import players from './routes/players.js';
 import sync from './routes/sync.js';
 import mcpHttp from './mcp/http.js';
+import oauthMcp from './routes/oauth-mcp.js';
+import wellKnown from './routes/well-known.js';
 import { sessions, type SessionUser } from './services/auth.js';
-import { MCP_TOKEN_HEADER, SESSION_COOKIE_NAME } from './constants.js';
+import { SESSION_COOKIE_NAME } from './constants.js';
 
 interface AppVariables {
 	user: SessionUser;
@@ -22,14 +24,15 @@ const app = createPlatformApp<{ Variables: AppVariables }>();
 app.route('/api/health', health);
 app.route('/api/auth', auth);
 
-// el mcp no usa cookies: va con un token estático en cabecera. sin token
-// configurado queda cerrado, nunca abierto.
-app.use('/mcp/*', async (c, next) => {
-	const expected = process.env.MCP_TOKEN;
-	if (!expected) return c.json({ error: 'mcp no configurado' }, 503);
-	if (c.req.header(MCP_TOKEN_HEADER) !== expected) return c.json({ error: 'no autorizado' }, 401);
-	await next();
-});
+// descubrimiento oauth: público por definición, es lo que permite a un cliente
+// mcp registrarse solo (rfc 9728 + rfc 8414)
+app.route('/.well-known', wellKnown);
+
+// authorization server del mcp: /register y /token son públicos por el estándar;
+// /authorize exige sesión de dashboard para pedir el consentimiento
+app.route('/api/oauth/mcp', oauthMcp);
+
+// el recurso protegido: bearer propio, no la cookie del dashboard
 app.route('/mcp', mcpHttp);
 
 // todo lo demás bajo /api exige sesión válida
@@ -37,6 +40,9 @@ app.use(
 	'/api/*',
 	sessionGate<{ Variables: AppVariables }, SessionUser>({
 		cookieName: SESSION_COOKIE_NAME,
+		// el authorization server del mcp se gestiona solo: /authorize ya comprueba
+		// la sesión por su cuenta y /register + /token son públicos por estándar
+		isPreAuth: (path) => path.startsWith('/api/oauth/mcp'),
 		validate: (token) => sessions.validateSession(token)?.user ?? null,
 		hydrate: async (c, user, next) => {
 			c.set('user', user);
