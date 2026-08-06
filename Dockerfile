@@ -1,4 +1,11 @@
-FROM node:24-trixie-slim AS build
+# ⚠️ el minor de node va PINCHADO a propósito, no uses `node:24-trixie-slim`.
+# con node 24.19 el binding nativo de better-sqlite3 11.10 revienta al recoger el
+# gc los Statement ya usados: `RemoveEnvironmentCleanupHook: Assertion (env) !=
+# nullptr` en `Statement::~Statement()`, que mata el proceso entero un rato
+# DESPUÉS de la pasada del poller (el contenedor se reiniciaba solo). con 24.15
+# el mismo bundle y la misma carga van finos. antes de mover el pin, comprueba
+# que una pasada de `clauses` (511 jugadores) sobrevive al gc.
+FROM node:24.15.0-trixie-slim AS build
 RUN npm install -g pnpm@10
 WORKDIR /app
 
@@ -28,7 +35,7 @@ RUN pnpm --filter @fantasy/web build \
     && pnpm --filter @fantasy/api build
 
 # --- producción ---
-FROM node:24-trixie-slim AS production
+FROM node:24.15.0-trixie-slim AS production
 WORKDIR /app/packages/api
 
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
