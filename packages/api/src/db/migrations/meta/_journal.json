@@ -57,6 +57,13 @@
       "when": 1786025185451,
       "tag": "0007_purchase_price",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1786135743735,
+      "tag": "0008_clause-change-floor",
+      "breakpoints": true
     }
   ]
 }

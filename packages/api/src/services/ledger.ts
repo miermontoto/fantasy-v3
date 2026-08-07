@@ -56,8 +56,12 @@ export interface CashEstimate {
 }
 
 /**
- * gasto neto estimado en subidas de cláusula: coste de los multiplicadores vigentes
- * por encima del base, más la mitad no reembolsada de las bajadas observadas.
+ * gasto neto estimado en subidas de cláusula. son dos modos distintos, no uno con
+ * un filtro: sin ancla se RECONSTRUYE el gasto acumulado desde los multiplicadores
+ * vigentes (más la mitad no reembolsada de las bajadas, que el snapshot de hoy ya
+ * no enseña); con ancla se aplican solo los DELTAS observados después, porque todo
+ * lo anterior ya está dentro del saldo que el mánager declaró, y ahí una bajada
+ * devuelve dinero en vez de dejar gasto hundido.
  *
  * el coste es LINEAL (20% del suelo por escalón, ver `clauseLadderCost`), y por
  * tanto independiente del camino: reconstruirlo desde el multiplicador de hoy vale
@@ -74,16 +78,22 @@ export function estimateClauseSpend(communityId: string, managerId: string, sinc
 	// están descontadas del saldo que el mánager declaró
 	if (sinceTs > 0) {
 		for (const change of recentClauseChanges(1000)) {
+			if (change.kind !== 'clause_up' && change.kind !== 'clause_down') continue;
 			if (change.ownerId !== managerId || change.ts <= sinceTs) continue;
-			const value = change.value ?? 0;
-			if (value <= 0) continue;
-			const before = clauseSteps(change.oldClause ?? 0, value);
-			const after = clauseSteps(change.newClause ?? 0, value);
-			if (change.kind === 'clause_up') spend += clauseLadderCost(value, before, after);
-			// bajar reembolsa la mitad: el coste neto es la mitad de lo retirado
-			if (change.kind === 'clause_down') {
-				spend += clauseLadderCost(value, after, before) * (1 - CLAUSE.REFUND_PCT);
-			}
+
+			// el escalón se cuenta y se cobra sobre el SUELO, nunca sobre el valor. las
+			// filas anteriores a la columna `clauseFloor` no lo traen: se saltan en vez
+			// de caer al valor, que es justo el divisor que inventaba gasto.
+			const floor = change.clauseFloor ?? 0;
+			if (floor <= 0) continue;
+
+			// aquí NO se reconstruye desde cero, se aplica el delta observado: bajar
+			// devuelve dinero de verdad, porque lo que se pagó al subir ya está dentro
+			// del saldo declarado en el ancla. `clauseLadderCost` ya entrega el
+			// reembolso del 50% en negativo, así que un solo `+=` vale para los dos.
+			const before = clauseSteps(change.oldClause ?? 0, floor);
+			const after = clauseSteps(change.newClause ?? 0, floor);
+			spend += clauseLadderCost(floor, before, after);
 		}
 		return Math.round(spend);
 	}
@@ -125,13 +135,14 @@ export function estimateClauseSpend(communityId: string, managerId: string, sinc
 
 	for (const change of recentClauseChanges(1000)) {
 		if (change.kind !== 'clause_down' || change.ownerId !== managerId) continue;
-		const value = change.value ?? change.newClause ?? 0;
-		if (value <= 0) continue;
-		const before = clauseSteps(change.oldClause ?? 0, value);
-		const after = clauseSteps(change.newClause ?? 0, value);
+		// mismo criterio que arriba: sin suelo guardado no se imputa nada
+		const floor = change.clauseFloor ?? 0;
+		if (floor <= 0) continue;
+		const before = clauseSteps(change.oldClause ?? 0, floor);
+		const after = clauseSteps(change.newClause ?? 0, floor);
 		// al bajar se recupera el 50%: la otra mitad es gasto perdido que el
 		// snapshot actual ya no refleja
-		const removed = clauseLadderCost(value, after, before);
+		const removed = clauseLadderCost(floor, after, before);
 		spend += removed * (1 - CLAUSE.REFUND_PCT);
 	}
 

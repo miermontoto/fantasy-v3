@@ -106,10 +106,26 @@ test('parseQuickBalance mapea maxDebt a capacidad restante', () => {
 	assert.equal(balance.remainingDebt, 9226564);
 });
 
-test('clauseSteps cuenta escalones sobre el multiplicador base', () => {
+test('clauseSteps cuenta escalones sobre el SUELO, no sobre el valor', () => {
 	assert.equal(clauseSteps(150, 100), 0); // 1.5x = por defecto
 	assert.equal(clauseSteps(200, 100), 1); // 2.0x = un escalón
 	assert.equal(clauseSteps(400, 100), 5); // 4.0x = tope
+});
+
+test('clauseSteps absorbe la deriva del suelo en vez de cobrarla', () => {
+	// el suelo guardado es el de la última pasada profunda y la cláusula sigue al
+	// valor a diario: 1.5x se lee como 1.545x sin que nadie haya tocado nada
+	assert.equal(clauseSteps(154, 100), 0);
+	assert.equal(clauseSteps(206, 100), 1);
+	// y esa deriva no puede convertirse en gasto
+	assert.equal(clauseLadderCost(100, clauseSteps(150, 100), clauseSteps(154, 100)), 0);
+});
+
+test('clauseLadderCost devuelve el reembolso en negativo al bajar de escalón', () => {
+	// con ancla el delta se aplica tal cual: bajar DEVUELVE dinero, porque lo que se
+	// pagó al subir ya está dentro del saldo declarado
+	assert.equal(clauseLadderCost(10_000_000, 3, 1), -2_000_000);
+	assert.equal(clauseLadderCost(10_000_000, 1, 3), 4_000_000);
 });
 
 test('clauseLadderCost: un escalón cuesta el 20% del suelo', () => {

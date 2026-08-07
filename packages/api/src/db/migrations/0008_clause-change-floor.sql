@@ -1,0 +1,1 @@
+ALTER TABLE `clause_change` ADD `clause_floor` integer;

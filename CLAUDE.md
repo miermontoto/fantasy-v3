@@ -133,7 +133,19 @@ construye la url como `ajax/` + el `data-ajax` del botón):
   contrastado con los dos saldos reales conocidos: **delta de 0 €** en ambos.
 - las anclas (`POST /api/anchors`) siguen existiendo como red de seguridad, pero
   **ya no hacen falta**: con el baseline reconstruido los dos saldos verificables
-  salen exactos sin ninguna ancla puesta.
+  salen exactos sin ninguna ancla puesta. ojo a que `estimateClauseSpend` son **dos
+  modos**, no uno filtrado: sin ancla reconstruye el acumulado desde los
+  multiplicadores de hoy (y suma la mitad hundida de las bajadas); con ancla aplica
+  solo los deltas posteriores, y ahí una bajada **devuelve** dinero.
+- el evento `clause_change` guarda su propio `clause_floor`: es el divisor del
+  multiplicador y la base del cobro, así que sin él no se puede poner precio a un
+  cambio. las filas anteriores a esa columna (las 16 primeras, con los falsos
+  positivos) lo tienen a null y **se saltan** en vez de caer al valor.
+- `clauseSteps` **redondea** al escalón entero. el multiplicador solo puede valer
+  1.5/2.0/2.5/3.0/3.5/4.0, así que un número fraccionario es siempre deriva del
+  suelo guardado (12h de antigüedad frente a una cláusula que sigue al valor a
+  diario), nunca una subida real. de paso neutraliza el coste de los `clause_up`
+  falsos que el poller sigue emitiendo por esa misma deriva.
 - un mánager puede **regalar** un jugador a otro (precio 0). el juego **no publica
   tarjeta** en el feed, así que es el único movimiento de plantilla que no se
   descubre solo: hay que anotarlo con `POST /api/transfers/gift`

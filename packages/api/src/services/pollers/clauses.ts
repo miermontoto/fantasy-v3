@@ -92,6 +92,11 @@ export const clausesPoller: Poller = {
 				continue;
 			}
 
+			// el suelo conocido se guarda EN el evento, no solo se usa para detectarlo:
+			// es el divisor del multiplicador y la base sobre la que el juego cobra el
+			// escalón, así que sin él el ledger no puede poner precio al cambio.
+			const floor = before.clauseFloor;
+
 			if (before.ownerId !== p.ownerId) {
 				changes.push({
 					playerId: p.id,
@@ -102,6 +107,7 @@ export const clausesPoller: Poller = {
 					oldClause: before.clause,
 					newClause: p.clause,
 					value: p.value,
+					clauseFloor: floor,
 				});
 			}
 
@@ -110,7 +116,6 @@ export const clausesPoller: Poller = {
 			// suelo conocido de la pasada profunda; sin él no se emite evento, porque
 			// `cláusula / valor` se mueve cada día por el mercado y generaba cientos
 			// de subidas falsas.
-			const floor = before.clauseFloor;
 			const wasFloor = before.clause === CLAUSE.FLOOR && p.clause === CLAUSE.FLOOR;
 			const oldMultiplier = floor ? (before.clause ?? 0) / floor : 0;
 			const newMultiplier = floor ? (p.clause ?? 0) / floor : 0;
@@ -123,6 +128,7 @@ export const clausesPoller: Poller = {
 					oldClause: before.clause,
 					newClause: p.clause,
 					value: p.value,
+					clauseFloor: floor,
 				});
 			}
 
@@ -135,6 +141,7 @@ export const clausesPoller: Poller = {
 					oldClause: before.clause,
 					newClause: p.clause,
 					value: p.value,
+					clauseFloor: floor,
 				});
 			}
 		}

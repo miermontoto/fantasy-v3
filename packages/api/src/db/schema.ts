@@ -177,6 +177,13 @@ export const clauseChange = sqliteTable(
 		newClause: integer('new_clause'),
 		/** valor en el momento del cambio: sin esto el coste no se puede estimar bien */
 		value: integer('value'),
+		/**
+		 * suelo conocido en el momento del cambio. es el único divisor válido para
+		 * sacar el multiplicador (`cláusula / valor` se mueve solo con el mercado) y
+		 * además es la base sobre la que el juego cobra el escalón. null en las filas
+		 * anteriores a esta columna: sin él no se imputa gasto.
+		 */
+		clauseFloor: integer('clause_floor'),
 	},
 	(t) => [index('clause_change_ts_idx').on(t.ts), index('clause_change_player_idx').on(t.playerId)],
 );

@@ -285,11 +285,22 @@ export function parseValueHistory(data: unknown): Map<string, number> {
 
 // ===== cláusulas =====
 
-/** escalones por encima del multiplicador base; continuo para tolerar deriva */
-export function clauseSteps(clause: number, value: number): number {
-	if (value <= 0 || clause <= 0) return 0;
-	const multiplier = clause / value;
-	const steps = (multiplier - CLAUSE.BASE_MULTIPLIER) / CLAUSE.STEP_SIZE;
+/**
+ * escalones por encima del multiplicador base.
+ *
+ * el divisor es el SUELO, nunca el valor: `cláusula / valor` se mueve solo con el
+ * mercado porque el suelo es `max(precio_pagado, valor)` y se congela al comprar.
+ *
+ * se redondea al escalón entero a propósito. el multiplicador solo puede valer
+ * 1.5, 2.0, 2.5, 3.0, 3.5 o 4.0, así que un número fraccionario es SIEMPRE deriva
+ * (el suelo guardado es el de la última pasada profunda y la cláusula sigue al
+ * valor a diario), nunca una subida real. sin redondear, esa deriva se cobraba
+ * como un trocito de escalón que nadie pagó.
+ */
+export function clauseSteps(clause: number, floor: number): number {
+	if (floor <= 0 || clause <= 0) return 0;
+	const multiplier = clause / floor;
+	const steps = Math.round((multiplier - CLAUSE.BASE_MULTIPLIER) / CLAUSE.STEP_SIZE);
 	return Math.min(Math.max(steps, 0), 5);
 }
 
