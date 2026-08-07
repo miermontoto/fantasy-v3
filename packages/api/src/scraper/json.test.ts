@@ -112,14 +112,19 @@ test('clauseSteps cuenta escalones sobre el multiplicador base', () => {
 	assert.equal(clauseSteps(400, 100), 5); // 4.0x = tope
 });
 
-test('clauseLadderCost: el primer escalón cuesta el 20% del valor', () => {
+test('clauseLadderCost: un escalón cuesta el 20% del suelo', () => {
 	// verificado en real: grimaldo 28.674M de 50% → 100% costó 5.7348M
 	assert.equal(clauseLadderCost(28_674_000, 0, 1), 5_734_800);
+	// y en el historial de balance: «Penalización | Modificación de cláusula (100%)
+	// de Fran García» = 2.9928M sobre un suelo de 14.964M (lo que se pagó por él)
+	assert.equal(clauseLadderCost(14_964_000, 0, 1), 2_992_800);
 });
 
-test('clauseLadderCost escala linealmente y reembolsa la mitad al bajar', () => {
-	// segundo escalón = el doble del primero
-	assert.equal(clauseLadderCost(1_000_000, 1, 2), 400_000);
-	// bajar de 2 a 1 devuelve el 50% de esos 400k
-	assert.equal(clauseLadderCost(1_000_000, 2, 1), -200_000);
+test('clauseLadderCost es LINEAL, no triangular', () => {
+	// todos los escalones cuestan lo mismo: el segundo no vale el doble
+	assert.equal(clauseLadderCost(1_000_000, 1, 2), 200_000);
+	// llegar al tope (1.5 → 4.0, cinco escalones) cuesta el suelo entero, no el triple
+	assert.equal(clauseLadderCost(1_000_000, 0, 5), 1_000_000);
+	// bajar de 2 a 1 devuelve el 50% de ese escalón
+	assert.equal(clauseLadderCost(1_000_000, 2, 1), -100_000);
 });

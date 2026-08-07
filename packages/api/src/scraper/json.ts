@@ -295,13 +295,23 @@ export function clauseSteps(clause: number, value: number): number {
 
 /**
  * coste en cash de mover la cláusula entre dos números de escalones.
- * cada escalón cuesta `base × nº_escalón` con base = 20% del valor; bajar
- * reembolsa el 50%, así que un movimiento negativo devuelve un número negativo.
+ *
+ * es LINEAL: cada escalón de +0.5 cuesta el 20% del suelo, siempre el mismo, así
+ * que ir del 1.5 al 4.0 cuesta el suelo ENTERO, no el triple. copiado del cliente
+ * del juego (`dist/js/listeners.js`, handler de `#clause_range`):
+ *
+ *   var cost = Math.floor(floor * 0.2 * (val - def));
+ *
+ * heredamos de v2 una escalera triangular (`base × nº_escalón` acumulado) que
+ * cobraba 3× el suelo por llegar al 4.0 e inflaba el gasto de media liga.
+ * bajar reembolsa el 50%, así que un movimiento negativo devuelve un número negativo.
+ *
+ * al ser lineal el coste es INDEPENDIENTE DEL CAMINO: da igual subir de golpe o de
+ * escalón en escalón, y por eso reconstruir el gasto desde el multiplicador actual
+ * es válido.
  */
 export function clauseLadderCost(value: number, stepsFrom: number, stepsTo: number): number {
 	if (stepsTo === stepsFrom) return 0;
-	const base = value * CLAUSE.STEP_RATE;
-	const triangular = (n: number) => (n * (n + 1)) / 2;
-	const delta = base * (triangular(stepsTo) - triangular(stepsFrom));
-	return delta < 0 ? delta * CLAUSE.REFUND_PCT : delta;
+	const delta = value * CLAUSE.STEP_RATE * (stepsTo - stepsFrom);
+	return delta < 0 ? -Math.floor(Math.abs(delta) * CLAUSE.REFUND_PCT) : Math.floor(delta);
 }

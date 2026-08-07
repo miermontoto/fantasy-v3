@@ -27,7 +27,7 @@ export const CLAUSE = {
 	STEP_SIZE: 0.5,
 	/** tope observado */
 	MAX_MULTIPLIER: 4,
-	/** el primer escalón cuesta el 20% del valor; los siguientes escalan x2, x3... */
+	/** cada escalón cuesta el 20% del SUELO, siempre lo mismo: el coste es lineal */
 	STEP_RATE: 0.2,
 	/** bajar la cláusula reembolsa la mitad de lo invertido */
 	REFUND_PCT: 0.5,

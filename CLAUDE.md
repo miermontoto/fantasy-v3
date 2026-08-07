@@ -85,9 +85,23 @@ construye la url como `ajax/` + el `data-ajax` del botón):
 ### economía de cláusulas (verificado 26/27)
 - cláusula = suelo × multiplicador; el suelo sigue al valor a diario, **el
   multiplicador es lo que el dueño controla**. por defecto 1.5x, máximo 4.0x.
-- subir cuesta **cash** (no créditos): cada escalón de +0.5 cuesta
-  `base × nº_escalón`, con `base = 20% del valor` en el momento de subir.
-- bajar reembolsa el **50%** de lo invertido.
+- subir cuesta **cash** (no créditos) y el coste es **LINEAL**: cada escalón de
+  +0.5 cuesta el **20% del suelo**, siempre lo mismo. subir del 1.5 al 4.0 cuesta
+  el suelo entero, no el triple. la fórmula está literal en el cliente del juego
+  (`dist/js/listeners.js`, handler de `#clause_range`):
+  `cost = Math.floor(floor * 0.2 * (val - def))`, con `val`/`def` índices sobre
+  `[1.5, 2.0, 2.5, 3.0, 3.5, 4.0]` (el índice 6 del range es «Blindado», escudo).
+  contrastado con dos cobros reales del historial de balance: Grimaldo (suelo
+  28.674M → 5.7348M) y Fran García (suelo 14.964M → 2.9928M), ambos exactos.
+  ⚠️ v2 usaba una escalera **triangular** (`base × nº_escalón` acumulado) y v3 la
+  heredó: cobraba 3× el suelo por llegar al 4.0. a Lendoiro le imputaba **63.5M**
+  de gasto en cláusulas cuando lo real son **30.2M**, y por eso su cash salía
+  imposible (compró a Pedri por 73.5M con el saldo estimado en negativo).
+  también hay una versión en **créditos** para saltarse el pago en cash:
+  `sku_prices.clause_t{tier}_s{n}` de `_FG_cfg` (tier 1: 30/60/90/120/150).
+- el coste se cobra sobre el **suelo del momento**, así que al ser lineal es
+  independiente del camino (subir de golpe o escalón a escalón cuesta igual).
+- bajar reembolsa el **50%** de lo invertido (`Math.abs(Math.floor(cost / 2))`).
 - suelo mínimo de cláusula: **1.0M** (infla el ratio de los jugadores baratos).
 - los escudos cuestan créditos. tras un reset hay un escudo global (~12 días).
 - ⚠️ el campo `shield` del **listado miente**; solo `clause.shield` del detalle vale.

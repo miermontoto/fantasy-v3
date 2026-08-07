@@ -59,10 +59,13 @@ export interface CashEstimate {
  * gasto neto estimado en subidas de cláusula: coste de los multiplicadores vigentes
  * por encima del base, más la mitad no reembolsada de las bajadas observadas.
  *
- * limitación conocida: las subidas anteriores al seguimiento se valoran al valor
- * ACTUAL del jugador, así que quien subió la cláusula de alguien que después se
- * revalorizó mucho aparece con gasto sobreestimado. los cambios observados desde
- * que hay histórico usan el valor del momento y sí son exactos.
+ * el coste es LINEAL (20% del suelo por escalón, ver `clauseLadderCost`), y por
+ * tanto independiente del camino: reconstruirlo desde el multiplicador de hoy vale
+ * igual que sumar escalón a escalón.
+ *
+ * limitación conocida: se reconstruye con el suelo de HOY, no con el que había el
+ * día de la subida. como el suelo sigue al valor cuando este sube, quien subió la
+ * cláusula de alguien que después se revalorizó mucho sale sobreestimado.
  */
 export function estimateClauseSpend(communityId: string, managerId: string, sinceTs = 0): number {
 	let spend = 0;
