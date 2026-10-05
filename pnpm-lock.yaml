@@ -19,7 +19,7 @@ importers:
         version: link:../shared
       '@hono/node-server':
         specifier: ^1.14.0
-        version: 1.19.17(hono@4.13.0)
+        version: 1.19.17(hono@4.13.7)
       '@modelcontextprotocol/sdk':
         specifier: ^1.0.0
         version: 1.30.0(zod@3.25.76)
@@ -69,8 +69,8 @@ importers:
         specifier: ^0.38.0
         version: 0.38.4(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(better-sqlite3@11.10.0)(kysely@0.28.17)
       hono:
-        specifier: ^4.7.0
-        version: 4.13.0
+        specifier: ^4.13.7
+        version: 4.13.7
       zod:
         specifier: ^3.24.0
         version: 3.25.76
@@ -2681,6 +2681,10 @@ packages:
     resolution: {integrity: sha512-jhunvfHWxd7J5EFfSgH4xsYJzSe/lfqbUCxiyyeaQasUsXeEHXtzVid+7EOGByc5JnFa23SSFL3Y2RV/z1T+eQ==}
     engines: {node: '>=16.9.0'}
 
+  hono@4.13.7:
+    resolution: {integrity: sha512-c8/gF9ac8Y78/agExVocyLevgR+JlpNB444Py0FSX8pJoPdYUfUzRcXtYEYGwt6l19qIlVZPN5Mfsw9jFShmQQ==}
+    engines: {node: '>=16.9.0'}
+
   http-errors@2.0.1:
     resolution: {integrity: sha512-4FbRdAX+bSdmo4AUFuS0WNiPz8NgFt+r8ThgNWmlrjQjt1Q7ZR9+zTlce2859x4KSXrwIsaeTqDoKQmtP8pLmQ==}
     engines: {node: '>= 0.8'}
@@ -4843,6 +4847,10 @@ snapshots:
     dependencies:
       hono: 4.13.0
 
+  '@hono/node-server@1.19.17(hono@4.13.7)':
+    dependencies:
+      hono: 4.13.7
+
   '@inlang/paraglide-js@2.23.1(typescript@5.9.3)(vite@6.4.3(@types/node@22.20.1)(terser@5.49.1)(tsx@4.23.7))':
     dependencies:
       '@inlang/recommend-sherlock': 0.2.1
@@ -4994,7 +5002,7 @@ snapshots:
 
   '@modelcontextprotocol/sdk@1.30.0(zod@3.25.76)':
     dependencies:
-      '@hono/node-server': 1.19.17(hono@4.13.0)
+      '@hono/node-server': 1.19.17(hono@4.13.7)
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       content-type: 1.0.5
@@ -5004,7 +5012,7 @@ snapshots:
       eventsource-parser: 3.1.0
       express: 5.2.1
       express-rate-limit: 8.6.2(express@5.2.1)
-      hono: 4.13.0
+      hono: 4.13.7
       jose: 6.2.8
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
@@ -6108,6 +6116,8 @@ snapshots:
       function-bind: 1.1.2
 
   hono@4.13.0: {}
+
+  hono@4.13.7: {}
 
   http-errors@2.0.1:
     dependencies:
