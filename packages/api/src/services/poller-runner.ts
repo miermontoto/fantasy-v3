@@ -5,6 +5,7 @@
 // en un bucle silencioso de peticiones. deja que lancen; el runner registra y espacia.
 
 import { eq } from 'drizzle-orm';
+import { withSpan } from '@platform/observability';
 import { getDb } from '../db/connection.js';
 import { pollerState } from '../db/schema.js';
 
@@ -84,7 +85,11 @@ async function runAndReschedule(poller: Poller): Promise<void> {
 
 function schedule(poller: Poller, delayMs: number): void {
 	const timer = setTimeout(() => {
-		void runAndReschedule(poller);
+		// cada pasada abre su propia traza (root): sus queries y fetches cuelgan de ella
+		void withSpan(`poll ${poller.name}`, () => runAndReschedule(poller), {
+			root: true,
+			attributes: { 'poller.name': poller.name },
+		});
 	}, delayMs);
 	// no mantener vivo el proceso solo por un poller pendiente
 	timer.unref?.();

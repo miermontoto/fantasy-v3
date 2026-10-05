@@ -223,6 +223,15 @@ los apaga para trabajar en local contra un snapshot.
 
 ❌ `setInterval` suelto. usa el `poller-runner`.
 
+## debug: trazas y logs
+
+`@platform/observability` traza cada request http, cada query sqlite dentro de ella, los
+fetch salientes (los ajax de fantasy marca) y cada pasada de poller (`poll <name>`, traza
+raíz). los logs llevan `trace=<id>` y las respuestas `x-trace-id`. antes de leer código:
+`platform/tooling/observability/obs.sh errors --service fantasy` · `obs.sh slow --kind fetch`
+· `obs.sh queries --service fantasy` · `obs.sh trace <trace_id>`. export a openobserve con
+`OTEL_EXPORTER_OTLP_ENDPOINT` + `OTEL_EXPORTER_OTLP_HEADERS` en el `.env` (vacío = sin export).
+
 ## estilo
 
 - comentarios en **español minúscula**, identificadores en inglés. la primera
