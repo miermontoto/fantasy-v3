@@ -19,7 +19,7 @@ importers:
         version: link:../shared
       '@hono/node-server':
         specifier: ^1.14.0
-        version: 1.19.17(hono@4.13.0)
+        version: 1.19.17(hono@4.13.11)
       '@modelcontextprotocol/sdk':
         specifier: ^1.0.0
         version: 1.30.0(zod@3.25.76)
@@ -69,8 +69,8 @@ importers:
         specifier: ^0.38.0
         version: 0.38.4(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(better-sqlite3@11.10.0)(kysely@0.28.17)
       hono:
-        specifier: ^4.7.0
-        version: 4.13.0
+        specifier: ^4.13.11
+        version: 4.13.11
       zod:
         specifier: ^3.24.0
         version: 3.25.76
@@ -177,7 +177,7 @@ importers:
     dependencies:
       '@hono/node-server':
         specifier: ^1.14.0
-        version: 1.19.17(hono@4.13.0)
+        version: 1.19.17(hono@4.13.11)
       '@platform/observability':
         specifier: workspace:*
         version: link:../observability
@@ -186,7 +186,7 @@ importers:
         version: 16.6.1
       hono:
         specifier: ^4.12.0
-        version: 4.13.0
+        version: 4.13.11
     devDependencies:
       '@opentelemetry/api':
         specifier: ^1.9.1
@@ -2677,8 +2677,8 @@ packages:
     resolution: {integrity: sha512-T2UbfbBEF32wiepXIsMlTW9+dDYC6wMh/t/vYA4tuOMKqWz/n3vr1NFSxQiyP+zk2mXsoMA/i/7qV6LKut1t1A==}
     engines: {node: '>= 0.4'}
 
-  hono@4.13.0:
-    resolution: {integrity: sha512-jhunvfHWxd7J5EFfSgH4xsYJzSe/lfqbUCxiyyeaQasUsXeEHXtzVid+7EOGByc5JnFa23SSFL3Y2RV/z1T+eQ==}
+  hono@4.13.11:
+    resolution: {integrity: sha512-/SMX/RQNJn7oNmFwH6DtwDqcrzZU2otm1FD6OJe2cWF6cfy/F8hq0XVBv7xW3FTJshRQwuBnXHDq2kNsdZnshg==}
     engines: {node: '>=16.9.0'}
 
   http-errors@2.0.1:
@@ -4839,9 +4839,9 @@ snapshots:
   '@esbuild/win32-x64@0.28.1':
     optional: true
 
-  '@hono/node-server@1.19.17(hono@4.13.0)':
+  '@hono/node-server@1.19.17(hono@4.13.11)':
     dependencies:
-      hono: 4.13.0
+      hono: 4.13.11
 
   '@inlang/paraglide-js@2.23.1(typescript@5.9.3)(vite@6.4.3(@types/node@22.20.1)(terser@5.49.1)(tsx@4.23.7))':
     dependencies:
@@ -4994,7 +4994,7 @@ snapshots:
 
   '@modelcontextprotocol/sdk@1.30.0(zod@3.25.76)':
     dependencies:
-      '@hono/node-server': 1.19.17(hono@4.13.0)
+      '@hono/node-server': 1.19.17(hono@4.13.11)
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       content-type: 1.0.5
@@ -5004,7 +5004,7 @@ snapshots:
       eventsource-parser: 3.1.0
       express: 5.2.1
       express-rate-limit: 8.6.2(express@5.2.1)
-      hono: 4.13.0
+      hono: 4.13.11
       jose: 6.2.8
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
@@ -6107,7 +6107,7 @@ snapshots:
     dependencies:
       function-bind: 1.1.2
 
-  hono@4.13.0: {}
+  hono@4.13.11: {}
 
   http-errors@2.0.1:
     dependencies:
@@ -6315,7 +6315,8 @@ snapshots:
 
   kolorist@1.8.0: {}
 
-  kysely@0.28.17: {}
+  kysely@0.28.17:
+    optional: true
 
   leven@3.1.0: {}
 
